@@ -1,0 +1,14 @@
+services:
+- type: worker
+  name: jravis-daily-report
+  env: python
+  plan: starter
+  buildCommand: pip install -r requirements.txt
+  startCommand: python -m jravis.scripts.jravis_daily_report
+  envVars:
+    - key: JRAVIS_SENDER
+      value: reports@jravis.local
+    - key: JRAVIS_RECEIVERS
+      value: nrveeresh327@gmail.com
+    - key: JRAVIS_LOCK_CODE
+      value: 0000

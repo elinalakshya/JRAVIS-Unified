@@ -1,0 +1,178 @@
+"use client";
+import React, { useEffect, useState } from "react";
+
+const LOCK_CODE = "2040"; // simple access code for lock screen
+
+const SERVICES = [
+  { key: "backend", name: "Backend API", url: "https://jravis-backend.onrender.com/api/status" },
+  { key: "brain", name: "JRAVIS Brain", url: "https://jravis-brain.onrender.com/api/status" },
+  { key: "intelligence", name: "Intelligence Worker", url: "https://mission2040-intelligence-worker.onrender.com/api/status" },
+  { key: "memory_sync", name: "Memory Sync", url: "https://mission2040-memory-sync-worker.onrender.com/api/status" },
+  { key: "daily_report", name: "Daily Report", url: "https://jravis-daily-report.onrender.com/api/status" },
+  { key: "weekly_report", name: "Weekly Report", url: "https://jravis-weekly-report.onrender.com/api/status" },
+  { key: "va_connector", name: "VA Bot Connector", url: "https://va-bot-connector.onrender.com/api/status" },
+  { key: "income", name: "Income Bundle", url: "https://income-system-bundle.onrender.com/api/status" },
+];
+
+async function ping(url, timeout = 6000) {
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    const res = await fetch(url, { method: "GET", signal: controller.signal });
+    clearTimeout(id);
+    if (!res.ok) return { ok: false, code: res.status, body: await res.text() };
+    let json;
+    try { json = await res.json(); } catch (e) { json = { text: await res.text() }; }
+    return { ok: true, code: res.status, body: json };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+export default function JRAVISDashboardPage() {
+  const [statuses, setStatuses] = useState(() => SERVICES.map(s => ({ ...s, ok: null, info: null })));
+  const [lastChecked, setLastChecked] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [earnings, setEarnings] = useState({ inr: null, usd: null });
+  const [locked, setLocked] = useState(true);
+  const [inputCode, setInputCode] = useState("");
+  const [idleTimer, setIdleTimer] = useState(null);
+
+  useEffect(() => {
+    const handleActivity = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      const timer = setTimeout(() => setLocked(true), 5 * 60 * 1000); // auto lock after 5 min idle
+      setIdleTimer(timer);
+    };
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+    handleActivity();
+    return () => {
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!locked) {
+      refreshAll();
+      const timer = setInterval(refreshAll, 30_000);
+      return () => clearInterval(timer);
+    }
+  }, [locked]);
+
+  async function refreshAll() {
+    setLoading(true);
+    const results = await Promise.all(SERVICES.map(async (s) => {
+      const r = await ping(s.url).catch(e => ({ ok: false, error: e.message }));
+      return { ...s, ok: !!r.ok, info: r };
+    }));
+    setStatuses(results);
+    setLastChecked(new Date().toISOString());
+    setLoading(false);
+
+    try {
+      const res = await fetch("/api/earnings");
+      if (res.ok) {
+        const j = await res.json();
+        setEarnings({ inr: j.inr ?? null, usd: j.usd ?? null });
+      }
+    } catch {}
+  }
+
+  const onlineCount = statuses.filter(s => s.ok).length;
+  const total = statuses.length;
+
+  if (locked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-green-300">
+        <div className="bg-[#06140f] p-8 rounded-2xl border border-green-800/40 shadow-lg w-80 text-center">
+          <h1 className="text-2xl font-bold mb-4">JRAVIS Locked</h1>
+          <p className="text-sm mb-4">Enter access code to continue</p>
+          <input
+            type="password"
+            value={inputCode}
+            onChange={e => setInputCode(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && checkCode()}
+            className="w-full px-3 py-2 rounded-md bg-[#0a1e18] border border-green-800 focus:outline-none text-center"
+            placeholder="Enter Code"
+          />
+          <button onClick={checkCode} className="mt-4 px-4 py-2 rounded-md bg-green-700/20 hover:bg-green-700/30">Unlock</button>
+        </div>
+      </div>
+    );
+  }
+
+  function checkCode() {
+    if (inputCode === LOCK_CODE) {
+      setLocked(false);
+      setInputCode("");
+    } else {
+      alert("Invalid code. Try again.");
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-[#c8ffe6] antialiased">
+      <div className="max-w-7xl mx-auto p-6">
+        <header className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-2xl">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" fill="#00220f"/>
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">JRAVIS</h1>
+              <p className="text-sm text-green-200">Mission 2040 · Passive Systems Dashboard</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-green-300">Services online</div>
+            <div className="text-lg font-medium">{onlineCount}/{total}</div>
+            <div className="mt-2 text-xs text-green-400">Last: <span className="font-mono">{lastChecked ? new Date(lastChecked).toLocaleString() : '—'}</span></div>
+          </div>
+        </header>
+
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <section className="col-span-2 bg-[#07100d] rounded-2xl p-6 shadow-xl border border-green-900/30">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">System Health</h2>
+              <div className="flex items-center gap-3">
+                <button onClick={refreshAll} className="px-3 py-1 rounded-md bg-green-700/20 hover:bg-green-700/30 text-green-100 text-sm">Refresh</button>
+                <div className="text-sm text-green-300">{loading ? 'Checking…' : 'Idle'}</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {statuses.map(service => (
+                <article key={service.key} className="flex items-center gap-4 p-3 rounded-xl bg-gradient-to-r from-[#04120f] to-[#071a13] border border-green-900/20">
+                  <div className={`w-3 h-3 rounded-full ${service.ok ? 'bg-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 'bg-red-600/80'}`} />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium">{service.name}</div>
+                      <div className="text-xs text-green-300 font-mono">{service.ok ? 'Online' : 'Offline'}</div>
+                    </div>
+                    <div className="text-xs text-green-200/80 mt-1">{service.info && service.info.ok ? (service.info.body && service.info.body.status ? JSON.stringify(service.info.body) : 'OK') : (service.info && service.info.error ? service.info.error : 'No response')}</div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <aside className="bg-[#06140f] rounded-2xl p-6 shadow-xl border border-green-900/30 h-full">
+            <h3 className="text-lg font-semibold mb-3">Earnings Summary</h3>
+            <div className="text-sm text-green-200/90">Total Earnings So Far</div>
+            <div className="mt-2 text-2xl font-bold">{earnings.inr ? `₹ ${earnings.inr}` : '—'} <span className="text-sm font-normal"> / {earnings.usd ? `$ ${earnings.usd}` : '—'}</span></div>
+            <div className="mt-6 text-xs text-green-300">
+              <div>Sync: <span className="font-mono">{loading ? 'running' : 'idle'}</span></div>
+              <div>Last Sync: <span className="font-mono">{lastChecked ? new Date(lastChecked).toLocaleString() : '—'}</span></div>
+            </div>
+          </aside>
+        </main>
+
+        <footer className="mt-8 text-center text-xs text-green-400">JRAVIS · Mission 2040 · {new Date().getFullYear()}</footer>
+      </div>
+    </div>
+  );
+}

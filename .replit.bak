@@ -1,0 +1,32 @@
+# ======================================================
+# JRAVIS + VA BOT CLOUD CONFIG  – Python 3.9 Runtime
+# ======================================================
+
+run = "bash startup.sh"
+language = "bash"
+
+[nix]
+packages = [
+  "python39Full",
+  "python39Packages.pip",
+  "python39Packages.setuptools",
+  "python39Packages.wheel",
+  "python39Packages.requests",
+  "python39Packages.flask",
+  "python39Packages.tinydb",
+  "python39Packages.pypdf2",
+  "python39Packages.fpdf",
+  "python39Packages.pandas",
+  "python39Packages.matplotlib",
+  "python39Packages.psutil",
+  "python39Packages.schedule",
+  "python39Packages.pytz"
+]
+
+[agent]
+expertMode = true
+
+# Ports (keep open for JRAVIS)
+[[ports]]
+localPort = 8080
+externalPort = 8080
