@@ -1171,11 +1171,37 @@ def get_dashboard_summary():
     }
     return data
 
+
 @app.route("/health", methods=["GET"])
 def health():
     return "OK", 200
 
-app.get('/health', (req, res) => res.status(200).send('OK'));
+    from fastapi import FastAPI
+
+    app = FastAPI()
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}
+
+    @app.get("/")
+    def root():
+        return {"message": "JRAVIS Backend running fine ✅"}
+
+
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
+
+
+@app.route("/")
+def root():
+    return jsonify({"message": "VA Bot operational ✅"})
 
 
 import os
