@@ -18,18 +18,22 @@ from vabot.phase1_connectors import CONNECTORS
 # -----------------------------
 app = Flask(__name__)
 
+
 @app.route("/")
 def index():
     return "✅ VA Bot is running 24/7 on Render!", 200
+
 
 @app.route("/health")
 def health():
     return "OK", 200
 
+
 @app.route("/send-report")
 def send_report():
     send_daily_report()
     return "Manual report sent ✅", 200
+
 
 # -----------------------------
 # Email Sending Logic
@@ -74,15 +78,35 @@ def send_daily_report():
 
     msg.attach(MIMEText(text, "plain"))
     msg.attach(MIMEText(html, "html"))
-
     try:
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465,
+                              context=context) as server:
             server.login(EMAIL, APP_PASS)
+            from email.mime.base import MIMEBase
+            from email import encoders
+
+            # ✅ Paths to generated reports (update if different)
+            summary_path = "reports/daily/summary_report.pdf"
+            invoice_path = "reports/daily/invoices.pdf"
+
+            for file_path in [summary_path, invoice_path]:
+                if os.path.exists(file_path):
+                    with open(file_path, "rb") as f:
+                        part = MIMEBase("application", "octet-stream")
+                        part.set_payload(f.read())
+                    encoders.encode_base64(part)
+                    part.add_header(
+                        "Content-Disposition",
+                        f"attachment; filename={os.path.basename(file_path)}")
+                    msg.attach(part)
+                else:
+                    print(f"⚠️ Missing file: {file_path}")
             server.sendmail(EMAIL, TO_EMAIL, msg.as_string())
         print(f"✅ Daily report email sent successfully at {now_str}")
     except Exception as e:
         print("❌ Error sending daily report:", e)
+
 
 # -----------------------------
 # First Log Confirmation Email
@@ -122,6 +146,7 @@ def send_first_log_confirmation(timestamp):
     except Exception as e:
         print("❌ Error sending first log confirmation:", e)
 
+
 # -----------------------------
 # Real Workflow Runner (Phase 1)
 # -----------------------------
@@ -143,13 +168,24 @@ def run_phase1_cycle():
                 raw = conn()
                 # Flatten results for cleaner logs
                 results.append({
-                    "Platform": raw.get("platform", conn.__name__),
-                    "Orders": raw.get("orders_yesterday") or raw.get("orders") or raw.get("projects_done") or "-",
-                    "Revenue": raw.get("revenue_yesterday") or raw.get("royalties_yesterday") or raw.get("earnings_yesterday") or raw.get("balance") or "-",
-                    "Followers": raw.get("followers") or "-",
-                    "Subscribers": raw.get("subscribers") if "subscribers" in raw else "-",
-                    "Status": raw.get("status") or raw.get("note") or "✅ OK",
-                    "Timestamp": now_str
+                    "Platform":
+                    raw.get("platform", conn.__name__),
+                    "Orders":
+                    raw.get("orders_yesterday") or raw.get("orders")
+                    or raw.get("projects_done") or "-",
+                    "Revenue":
+                    raw.get("revenue_yesterday")
+                    or raw.get("royalties_yesterday")
+                    or raw.get("earnings_yesterday") or raw.get("balance")
+                    or "-",
+                    "Followers":
+                    raw.get("followers") or "-",
+                    "Subscribers":
+                    raw.get("subscribers") if "subscribers" in raw else "-",
+                    "Status":
+                    raw.get("status") or raw.get("note") or "✅ OK",
+                    "Timestamp":
+                    now_str
                 })
             except Exception as e:
                 results.append({
@@ -177,6 +213,7 @@ def run_phase1_cycle():
         print(f"✅ Logged results to {log_file}")
         print("⏳ Sleeping for 1 hour...")
         time.sleep(3600)  # 1 hour
+
 
 # -----------------------------
 # App Runner

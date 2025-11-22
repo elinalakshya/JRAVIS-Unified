@@ -61,3 +61,18 @@ module.exports = {
   },
   plugins: [],
 };
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        darkbg: "#0a0a0f",
+        panel: "#11121a",
+        neon: "#00e0ff",
+      },
+    },
+  },
+  plugins: [],
+};
