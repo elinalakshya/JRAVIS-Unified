@@ -1,275 +1,139 @@
-# email_auto_reply.py
-from gmail_service import get_gmail_service
-from base64 import urlsafe_b64decode, urlsafe_b64encode
+import base64
+import json
+import os
 from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
-import datetime
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 from langdetect import detect
 
-# ---------------------------
-# 1. PRIORITY SENDER RULES
-# ---------------------------
-priority_senders = {
-    "client": "instant",
-    "supplier": "instant",
-    "partner": "instant",
-    "support": "priority",
-    "team": "priority",
-    "no-reply": "ignore",
-    "notification": "ignore",
-    "ads": "ignore",
-    "promo": "ignore"
-}
+# -----------------------------------------
+#  SECRET FILE PATHS FOR RENDER
+# -----------------------------------------
+CREDENTIALS_FILE = "/etc/secrets/credentials.json"
+TOKEN_FILE = "/etc/secrets/token.json"
+
+# Gmail scopes
+SCOPES = ["https://www.googleapis.com/auth/gmail.modify"]
 
 
-def sender_priority(sender):
-    sender_lower = sender.lower()
-    for key in priority_senders:
-        if key in sender_lower:
-            return priority_senders[key]
-    return "normal"
+def get_gmail_service():
+    """Load Google OAuth credentials + token.json (auto-refresh)."""
+
+    creds = None
+
+    # Load token.json if exists
+    if os.path.exists(TOKEN_FILE):
+        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+
+    # If no valid token, create a new one using credentials.json
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                CREDENTIALS_FILE, SCOPES)
+            creds = flow.run_local_server(port=0)
+
+        # Save updated token.json back into secret directory
+        with open(TOKEN_FILE, "w") as token:
+            token.write(creds.to_json())
+
+    return build("gmail", "v1", credentials=creds)
 
 
-# ---------------------------
-# 2. ATTACHMENT DETECTION
-# ---------------------------
-def detect_attachments(raw_msg):
-    attachments = []
-    parts = raw_msg["payload"].get("parts", [])
-    for part in parts:
-        if part.get("filename"):
-            attachments.append(part["filename"])
-    return attachments
+def send_reply(service, sender, subject, body):
+    """Send email reply using Gmail API."""
 
+    message = MIMEText(body)
+    message["to"] = sender
+    message["subject"] = f"Re: {subject}"
 
-# ---------------------------
-# 3. AUTO ATTACHMENT REPLY (optional)
-# ---------------------------
-def send_attachment(service, to_email, subject, message_text, file_path):
-    message = MIMEMultipart()
-    message["to"] = to_email
-    message["subject"] = subject
-
-    message.attach(MIMEText(message_text))
-
-    with open(file_path, "rb") as f:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(f.read())
-        encoders.encode_base64(part)
-        part.add_header("Content-Disposition",
-                        f"attachment; filename={file_path}")
-        message.attach(part)
-
-    raw = urlsafe_b64encode(message.as_bytes()).decode()
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
     service.users().messages().send(userId="me", body={"raw": raw}).execute()
 
 
-# ---------------------------
-# 4. LANGUAGE-BASED REPLIES
-# ---------------------------
-def language_based_reply(message):
-    lang = detect(message)
+def should_reply(subject, body):
+    """Only reply to real messages."""
 
-    replies = {
-        "en":
-        "Thank you for your email. We received your message and will get back to you shortly.",
-        "hi": "धन्यवाद, आपका संदेश प्राप्त हो गया। हम जल्द ही उत्तर देंगे।",
-        "kn":
-        "ಧನ್ಯವಾದಗಳು, ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಸ್ವೀಕರಿಸಲಾಗಿದೆ. ಶೀಘ್ರದಲ್ಲೇ ಪ್ರತಿಕ್ರಿಯಿಸುತ್ತೇವೆ.",
-        "te": "ధన్యవాదాలు, మీ మెయిల్ అందింది. త్వరలోనే ప్రత్యుత్తరం ఇస్తాం.",
-        "ta":
-        "நன்றி, உங்கள் மின்னஞ்சல் கிடைத்துள்ளது. விரைவில் பதில் அளிக்கப்படும்.",
-        "ar": "شكراً لرسالتك. سنرد عليك قريباً."
-    }
+    # Ignore newsletters + promotions
+    ignore_words = ["unsubscribe", "no-reply", "newsletter", "promotion"]
 
-    return replies.get(lang, replies["en"])
+    text = (subject + " " + body).lower()
+    if any(word in text for word in ignore_words):
+        return False
 
+    # Detect language (English only for reply)
+    try:
+        lang = detect(body)
+        if lang != "en":
+            return False
+    except:
+        return False
 
-# ---------------------------
-# 5. TONE-BASED REPLY
-# ---------------------------
-def tone_based_reply(message):
-    txt = message.lower()
-
-    if "urgent" in txt or "important" in txt or "asap" in txt:
-        return "We received your urgent message and are handling it immediately."
-
-    if "thank" in txt:
-        return "You're welcome! Let me know if you need anything else."
-
-    if "?" in txt or "question" in txt:
-        return "Thank you for your question. We will respond soon."
-
-    return "Thank you for contacting us."
+    return True
 
 
-# ---------------------------
-# 6. SMART REQUIRED-ONLY REPLY LOGIC
-# ---------------------------
-def generate_auto_reply(email_text):
-    text = email_text.lower()
-
-    # Ignore junk emails
-    ignore_keywords = [
-        "unsubscribe", "newsletter", "promotion", "offer", "discount", "otp",
-        "verification", "receipt", "invoice", "marketing", "news", "social",
-        "notification", "update"
-    ]
-
-    if any(k in text for k in ignore_keywords):
-        return None
-
-    # Emails requiring reply
-    if any(q in text
-           for q in ["help", "support", "issue", "problem", "?", "question"]):
-        reply = language_based_reply(email_text)
-        reply = tone_based_reply(email_text)
-        return reply
-
-    return None
-
-
-# ---------------------------
-# 7. AUTO FORWARD IMPORTANT EMAILS
-# ---------------------------
-def forward_email(service, msg_id, forward_to):
-    message = service.users().messages().get(userId="me",
-                                             id=msg_id,
-                                             format="raw").execute()
-    raw_msg = message["raw"]
-
-    forward = {
-        "raw": raw_msg,
-        "payload": {
-            "headers": [{
-                "name": "To",
-                "value": forward_to
-            }]
-        }
-    }
-
-    service.users().messages().send(userId="me", body=forward).execute()
-
-
-# ---------------------------
-# 8. DAILY SUMMARY REPORT
-# ---------------------------
-def generate_daily_summary():
-    service = get_gmail_service()
-
-    important = service.users().messages().list(
-        userId="me", q="label:IMPORTANT newer_than:1d").execute()
-    ignored = service.users().messages().list(
-        userId="me", q="label:IGNORED newer_than:1d").execute()
-
-    summary = f"""
-JRAVIS DAILY EMAIL SUMMARY
-
-Important emails handled: {len(important.get("messages", []))}
-Ignored emails archived: {len(ignored.get("messages", []))}
-System stable and running.
-
-Timestamp: {datetime.datetime.now()}
-"""
-
-    return summary
-
-
-def send_daily_summary():
-    service = get_gmail_service()
-    summary = generate_daily_summary()
-
-    msg = MIMEText(summary)
-    msg["to"] = "nrveeresh327@gmail.com"
-    msg["subject"] = "JRAVIS Daily Email Summary"
-
-    raw = urlsafe_b64encode(msg.as_bytes()).decode()
-    service.users().messages().send(userId="me", body={"raw": raw}).execute()
-
-
-# ---------------------------
-# 9. MAIN GMAIL ENGINE
-# ---------------------------
 def process_incoming_emails():
-    service = get_gmail_service()
+    """Main Gmail reader + auto-reply module."""
+    try:
+        service = get_gmail_service()
+        results = service.users().messages().list(userId="me",
+                                                  labelIds=["INBOX"],
+                                                  q="is:unread").execute()
 
-    results = service.users().messages().list(userId="me",
-                                              q="is:unread").execute()
-    messages = results.get("messages", [])
+        messages = results.get("messages", [])
 
-    if not messages:
-        return "No unread emails."
+        if not messages:
+            return
 
-    for msg in messages:
-        msg_id = msg["id"]
+        for msg in messages:
+            msg_data = service.users().messages().get(userId="me",
+                                                      id=msg["id"]).execute()
 
-        raw_msg = service.users().messages().get(userId="me",
-                                                 id=msg_id).execute()
+            payload = msg_data["payload"]
+            headers = payload.get("headers", [])
 
-        headers = raw_msg["payload"]["headers"]
-        sender = "(Unknown Sender)"
-        subject = "(No Subject)"
+            sender = subject = body = ""
 
-        for h in headers:
-            if h["name"] == "From":
-                sender = h["value"]
-            if h["name"] == "Subject":
-                subject = h["value"]
+            for header in headers:
+                name = header["name"]
+                value = header["value"]
 
-        # Decode email body
-        try:
-            body_data = raw_msg["payload"]["parts"][0]["body"]["data"]
-        except:
-            body_data = raw_msg["payload"]["body"]["data"]
+                if name == "From":
+                    sender = value
+                if name == "Subject":
+                    subject = value
 
-        text = urlsafe_b64decode(body_data).decode("utf-8")
+            # Extract body
+            if "data" in payload["body"]:
+                body = base64.urlsafe_b64decode(
+                    payload["body"]["data"]).decode("utf-8", errors="ignore")
+            else:
+                body = "No body"
 
-        # Detect attachments
-        attachments = detect_attachments(raw_msg)
+            # Decide reply
+            if should_reply(subject, body):
+                reply_text = f"""
+Hello,
 
-        # Determine priority
-        priority = sender_priority(sender)
+Thank you for your message.
 
-        # Auto reply logic
-        reply_text = generate_auto_reply(text)
+I have received your email and JRAVIS will respond with the required details shortly.
 
-        # AUTO ATTACHMENT reply example (optional)
-        if "pricing" in text:
-            send_attachment(service, sender, "Pricing",
-                            "Attached is the pricing", "pricing.pdf")
+Best regards,
+JRAVIS Auto-Assistant
+"""
+                send_reply(service, sender, subject, reply_text)
 
-        # Send reply if required
-        if reply_text:
-            msg_ready = MIMEText(reply_text)
-            msg_ready["to"] = sender
-            msg_ready["subject"] = f"Re: {subject}"
-
-            raw = urlsafe_b64encode(msg_ready.as_bytes()).decode()
-            service.users().messages().send(userId="me", body={
-                "raw": raw
-            }).execute()
-
+            # Mark message as read
             service.users().messages().modify(userId="me",
-                                              id=msg_id,
+                                              id=msg["id"],
                                               body={
-                                                  "addLabelIds": ["IMPORTANT"],
                                                   "removeLabelIds": ["UNREAD"]
                                               }).execute()
 
-            # Forward important emails
-            forward_email(service, msg_id, "nrveeresh327@gmail.com")
-
-        else:
-            # Archive ignored emails
-            service.users().messages().modify(userId="me",
-                                              id=msg_id,
-                                              body={
-                                                  "addLabelIds": ["IGNORED"],
-                                                  "removeLabelIds":
-                                                  ["UNREAD", "INBOX"]
-                                              }).execute()
-
-    return "Processed all emails."
+    except Exception as e:
+        print(f"Email engine error: {e}")
