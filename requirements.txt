@@ -23,3 +23,6 @@ httplib2==0.22.0
 fastapi==0.104.1
 pydantic==2.5.3
 pydantic_core==2.14.3
+
+starlette==0.37.2
+uvicorn==0.30.3

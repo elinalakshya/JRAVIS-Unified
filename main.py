@@ -85,11 +85,29 @@ def get_dashboard_summary():
 
 
 # ======================================================================
-# 3️⃣ MOUNT FASTAPI INSIDE FLASK
+# 3️⃣ ASGI SERVER (Flask + FastAPI Mounted Correctly)
 # ======================================================================
-application = DispatcherMiddleware(app, {
-    "/api": api,
-})
+from fastapi import FastAPI
+from starlette.middleware.wsgi import WSGIMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+
+asgi_app = FastAPI(title="JRAVIS Unified Server")
+
+# CORS
+asgi_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount Flask (as WSGI)
+asgi_app.mount("/", WSGIMiddleware(app))
+
+# Mount FastAPI under /api
+asgi_app.mount("/api", api)
+
+application = asgi_app  # This is the ASGI app Gunicorn/Uvicorn should run
 
 # ======================================================================
 # 4️⃣ STARTUP SERVER
