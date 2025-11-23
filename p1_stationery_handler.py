@@ -7,148 +7,145 @@ from datetime import datetime
 
 BASE_PATH = "/mnt/data/phase1/stationery/"
 
+
 def ensure_dir():
     if not os.path.exists(BASE_PATH):
         os.makedirs(BASE_PATH, exist_ok=True)
 
 
 # -----------------------------------------
-# 🔥 Stationery Product Types
+# 📦 GLOBAL STATIONERY EXPORT PRODUCT TYPES
 # -----------------------------------------
-PRODUCT_TYPES = [
-    "A5 Notebook Cover",
-    "A4 Notebook Cover",
-    "Hardcover Diary Design",
-    "Softcover Journal",
-    "Daily Planner Template",
-    "Weekly Planner Design",
-    "Kids Coloring Book Cover",
-    "Minimalist Sketchbook Cover",
-    "Cute Sticker Sheet",
-    "Aesthetic Bookmark Set",
-    "Notepad Design",
-    "Greetings Card Template",
-    "Invitation Card Set",
-    "Reward Sticker Sheet",
-    "Classroom Poster"
-]
+def generate_product_types():
+    products = [
+        "Premium A5 Notebooks", "Hardcover Journals", "Sketch Books",
+        "Daily Planners", "Budget Planners", "School Geometry Kits",
+        "Pen Packs (Black/Blue/Red)", "Highlighter Sets", "Sticky Notes",
+        "Art & Craft Packs", "Rulers & Measuring Tools",
+        "Office Stationery Combo Kit", "Math Workbook Sets",
+        "Handwriting Practice Books", "Kids Colouring Books"
+    ]
+
+    return random.sample(products, 10)
 
 
 # -----------------------------------------
-# 🔥 Design Prompt Generator
+# 📦 EXPORT TITLES
 # -----------------------------------------
-def generate_design_prompt(product):
-    return f"""
-Create a high-resolution print-ready design for: {product}.
-Style: Clean, commercial, export-friendly.
-Color mode: CMYK.
-Resolution: 300 DPI.
-Margins: Safe margins included.
-Add modern minimalist aesthetic unless product demands theme.
+def generate_export_titles(product_types):
+    titles = []
+    for p in product_types:
+        formatted = f"Wholesale {p} — Export Ready Pack (MOQ 100 Units)"
+        titles.append(formatted)
+    return titles
+
+
+# -----------------------------------------
+# 📦 EXPORT DESCRIPTION GENERATOR
+# -----------------------------------------
+def generate_descriptions(titles):
+    descriptions = []
+
+    for t in titles:
+        desc = f"""
+**{t}**
+
+✔ Export quality  
+✔ Made in India  
+✔ MOQ 100 – 5000 units  
+✔ Global compliant packaging  
+✔ Fast processing time  
+✔ Best for USA, UK, UAE, Europe, Australia  
+
+📦 *Lakshya Stationery Export Line*  
+Trusted by international buyers and B2B clients.
 """
+        descriptions.append(desc.strip())
+
+    return descriptions
 
 
 # -----------------------------------------
-# 🔥 Export Listing Description
+# 📦 EXPORT PACKAGING & SHIPPING DETAILS
 # -----------------------------------------
-def generate_listing_description(product):
-    return f"""
-Premium {product} designed for international stationery buyers.
-This product is perfect for wholesalers, distributors, and retail chains.
-
-✔ High-resolution commercial design  
-✔ Export-ready format  
-✔ Universal global appeal  
-✔ Suitable for bulk production  
-"""
+def generate_packaging_details():
+    packaging = [
+        "5-layer corrugated box — waterproof packing",
+        "Shrink-wrap individual items", "Bubble wrap for fragile sets",
+        "Custom logo print available", "Standard export box of 20–100 units",
+        "Gross weight per carton: 6–18 kg", "Dispatch within 3–7 business days"
+    ]
+    return packaging
 
 
 # -----------------------------------------
-# 🔥 Tags for Stationery Market
+# 📦 EXPORT THUMBNAIL AI PROMPTS
 # -----------------------------------------
-def generate_tags(product):
-    base = ["stationery", "export", "notebook", "planner", "diary", "design"]
-    words = product.lower().split()
-    return list(set(base + words))
+def generate_thumbnail_prompts(titles):
+    prompts = []
+    for t in titles:
+        prompts.append(
+            f"High-quality export product photo, white background, modern lighting. Include text overlay: '{t}'. Minimal clean design."
+        )
+    return prompts
 
 
 # -----------------------------------------
-# 🔥 SKU Generator
+# 📦 SAVE FINAL OUTPUT
 # -----------------------------------------
-def generate_sku(product, index):
-    code = ''.join(word[0].upper() for word in product.split()[:3])
-    return f"{code}-{index:03d}"
-
-
-# -----------------------------------------
-# 🔥 Printing Instructions (for factories)
-# -----------------------------------------
-def generate_printing_instructions(product):
-    return f"""
-PRINTING INSTRUCTIONS FOR {product.upper()}:
-• 300 DPI CMYK file
-• Include 3mm bleed
-• Add cutting guides
-• High contrast text
-• Export PDF/X-1a format
-"""
-
-
-# -----------------------------------------
-# 🔥 Save JSON Output
-# -----------------------------------------
-def save_output(batch):
+def save_output(product_types, titles, descriptions, packaging, thumbnails):
     ensure_dir()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_path = BASE_PATH + f"stationery_batch_{timestamp}.json"
+
+    data = {
+        "timestamp": timestamp,
+        "product_types": product_types,
+        "titles": titles,
+        "descriptions": descriptions,
+        "packaging_details": packaging,
+        "thumbnail_prompts": thumbnails
+    }
+
+    file_path = BASE_PATH + f"stationery_export_{timestamp}.json"
 
     with open(file_path, "w") as f:
-        json.dump(batch, f, indent=4)
+        json.dump(data, f, indent=4)
 
     return file_path
 
 
 # -----------------------------------------
-# 🔥 MAIN HANDLER
+# 📦 MAIN HANDLER (called by JRAVIS)
 # -----------------------------------------
 def run_stationery_handler():
+    product_types = generate_product_types()
+    titles = generate_export_titles(product_types)
+    descriptions = generate_descriptions(titles)
+    packaging = generate_packaging_details()
+    thumbnails = generate_thumbnail_prompts(titles)
 
-    selected = random.sample(PRODUCT_TYPES, 15)
-    items = []
-
-    for i, product in enumerate(selected, start=1):
-        items.append({
-            "product_type": product,
-            "design_prompt": generate_design_prompt(product),
-            "description": generate_listing_description(product),
-            "tags": generate_tags(product),
-            "sku": generate_sku(product, i),
-            "printing_instructions": generate_printing_instructions(product)
-        })
-
-    batch = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "product_count": len(items),
-        "products": items
-    }
-
-    file_path = save_output(batch)
+    file_path = save_output(product_types, titles, descriptions, packaging,
+                            thumbnails)
 
     return {
-        "status": "success",
-        "message": "Stationery export batch generated.",
-        "file": file_path,
-        "count": len(items),
-        "upload_instructions": """
-STATIONERY EXPORT WORKFLOW:
-1. Generate designs using 'design_prompt'.
-2. Export print files using 'printing_instructions'.
-3. Create a combined ZIP folder.
-4. Upload to your stationery distributor / marketplace.
+        "status":
+        "success",
+        "message":
+        "Stationery Export Pack Generated",
+        "file":
+        file_path,
+        "count":
+        len(titles),
+        "instructions":
+        """
+1. Open the JSON file.
+2. Each 'title' is 1 export-ready B2B listing.
+3. Use the description directly for Alibaba, IndiaMART, Etsy Wholesale, Shopify B2B.
+4. Use the thumbnail prompt to generate product photos.
+5. Packaging details go into "Export Details" section of your listing.
 """
     }
 
 
-# Debug
 if __name__ == "__main__":
     print(run_stationery_handler())

@@ -13,161 +13,128 @@ def ensure_dir():
         os.makedirs(BASE_PATH, exist_ok=True)
 
 
-# ---------------------------------------------
-# 🔥 Video Ideas (YouTube Automation Niches)
-# ---------------------------------------------
-YOUTUBE_TOPICS = [
-    "AI tools explained", "Motivation and success", "Financial growth hacks",
-    "Business shortcuts", "Passive income strategies",
-    "Top 5 apps you should know", "Tech news trends",
-    "Daily productivity habits", "Mindset transformation", "Side hustle ideas"
-]
-
-
-# ---------------------------------------------
-# 🔥 Generate Title
-# ---------------------------------------------
-def generate_title(topic):
-    templates = [
-        "The SECRET Behind {} Nobody Talks About",
-        "{} — Explained in 60 Seconds",
-        "Stop Ignoring This About {}",
-        "{}: The FASTEST Way to Improve Your Life",
-        "Why Most People Fail at {}",
-        "{} — Do THIS Every Day",
+# ---------------------------
+# 🔥 Generate 15 Video Ideas
+# ---------------------------
+def generate_video_ideas():
+    niches = [
+        "AI Tools 2025", "Make Money Online", "Productivity",
+        "Business Mindset", "Technology Trends", "Motivation", "Career Growth",
+        "Side Hustles", "Entrepreneurship", "Finance Tips"
     ]
-    return random.choice(templates).format(topic)
+
+    templates = [
+        "5 Things Nobody Told You About {}", "The Truth About {} in 2025",
+        "Stop Doing This If You Want Better {}",
+        "How I Use {} to Save 10 Hours/Week",
+        "This {} Trick Will Change Your Life", "Why Most People Fail at {}",
+        "{} — Explained in 60 Seconds"
+    ]
+
+    ideas = []
+
+    for _ in range(15):
+        topic = random.choice(niches)
+        template = random.choice(templates)
+        ideas.append(template.format(topic))
+
+    return ideas
 
 
-# ---------------------------------------------
-# 🔥 Generate Script (Short + Powerful)
-# ---------------------------------------------
-def generate_script(topic):
-    return f"""
-[HOOK]
-Most people completely ignore this about {topic}…
-
-[BODY 1]
-But once you understand it, everything changes. 
-Here's the truth: most people wait for motivation. Winners create momentum.
-
-[BODY 2]
-If you want to grow fast, start applying this today:
-1. Keep it simple.
-2. Stay consistent.
-3. Track your progress.
-
-[BODY 3]
-Anyone can improve their {topic} in 30 days with small daily habits.
-
-[ENDING]
-Follow for more powerful insights that change your life.
-"""
+# ---------------------------
+# 🔥 Generate YouTube Titles
+# ---------------------------
+def generate_titles(ideas):
+    titles = []
+    for idea in ideas:
+        titles.append(f"{idea} (Must Watch 2025)")
+    return titles
 
 
-# ---------------------------------------------
-# 🔥 Generate Thumbnail Prompt
-# ---------------------------------------------
-def generate_thumbnail_prompt(title):
-    short_title = title[:20]
-    return f"Create a high-contrast YouTube thumbnail with bold neon text '{short_title}...'. Dark background, glowing edges, dramatic expression."
+# ---------------------------
+# 🔥 Generate Short Scripts (50–80 words)
+# ---------------------------
+def generate_scripts(ideas):
+    scripts = []
+
+    for idea in ideas:
+        scripts.append(f"{idea}.\n"
+                       "Here's what you need to know:\n"
+                       "1. This applies to everyone.\n"
+                       "2. Most people ignore it.\n"
+                       "3. But the ones who don’t… grow fast.\n\n"
+                       "Save this video and take action today.")
+
+    return scripts
 
 
-# ---------------------------------------------
-# 🔥 Generate SEO Description
-# ---------------------------------------------
-def generate_description(topic):
-    return f"""
-This video breaks down the most important lessons about {topic}.
-If you're trying to improve your life, grow faster, or build success habits,
-this 60-second guide will change the way you see things.
-
-Follow for more daily insights.
-"""
-
-
-# ---------------------------------------------
-# 🔥 Hashtags
-# ---------------------------------------------
-def generate_hashtags(topic):
-    base = ["#shorts", "#motivation", "#success", "#lifehacks", "#inspiration"]
-    topic_tag = "#" + topic.replace(" ", "")
-    return base + [topic_tag]
+# ---------------------------
+# 🔥 Thumbnail Prompts
+# ---------------------------
+def generate_thumbnails(ideas):
+    thumbs = []
+    for idea in ideas:
+        thumbs.append(
+            f"Ultra-bold YouTube thumbnail. Big text: '{idea[:15]}...'. "
+            "High contrast yellow/black. Shocked face, dramatic lighting, viral style."
+        )
+    return thumbs
 
 
-# ---------------------------------------------
-# 🔥 Build Batch Output
-# ---------------------------------------------
-def save_output(batch):
+# ---------------------------
+# 🔥 Save JSON Output
+# ---------------------------
+def save_output(ideas, titles, scripts, thumbnails):
     ensure_dir()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_path = BASE_PATH + f"youtube_batch_{timestamp}.json"
 
     with open(file_path, "w") as f:
-        json.dump(batch, f, indent=4)
+        json.dump(
+            {
+                "timestamp": timestamp,
+                "ideas": ideas,
+                "titles": titles,
+                "scripts": scripts,
+                "thumbnails": thumbnails
+            },
+            f,
+            indent=4)
 
     return file_path
 
 
-# ---------------------------------------------
-# 🔥 MAIN HANDLER
-# ---------------------------------------------
+# ---------------------------
+# 🔥 MAIN HANDLER FUNCTION
+# ---------------------------
 def run_youtube_handler():
+    ideas = generate_video_ideas()
+    titles = generate_titles(ideas)
+    scripts = generate_scripts(ideas)
+    thumbnails = generate_thumbnails(ideas)
 
-    ideas = random.sample(YOUTUBE_TOPICS, 10)
-    videos = []
-
-    for topic in ideas:
-        title = generate_title(topic)
-        videos.append({
-            "topic":
-            topic,
-            "title":
-            title,
-            "script":
-            generate_script(topic),
-            "thumbnail_prompt":
-            generate_thumbnail_prompt(title),
-            "description":
-            generate_description(topic),
-            "hashtags":
-            generate_hashtags(topic),
-            "outline": [
-                "Hook (0-3 sec)", "Body Part 1 (3-10 sec)",
-                "Body Part 2 (10-20 sec)", "Tips (20-40 sec)",
-                "End CTA (40-60 sec)"
-            ]
-        })
-
-    batch = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "video_count": len(videos),
-        "videos": videos
-    }
-
-    file_path = save_output(batch)
+    file_path = save_output(ideas, titles, scripts, thumbnails)
 
     return {
         "status":
         "success",
         "message":
-        "YouTube batch generated.",
+        "YouTube batch generated",
         "file":
         file_path,
         "count":
-        len(videos),
+        len(ideas),
         "upload_instructions":
         """
-YOUTUBE UPLOAD:
-1. Record/Generate video using script + outline.
-2. Use thumbnail_prompt to generate thumbnail.
-3. Paste title, description, hashtags.
-4. Upload manually (YouTube does not allow automation).
-"""
+1. Open the generated JSON file.
+2. Each idea = one video.
+3. Use script for YouTube shorts.
+4. Use title + thumbnail prompt to create thumbnails.
+5. Upload manually (platform automation restricted).
+        """
     }
 
 
-# Debug
 if __name__ == "__main__":
     print(run_youtube_handler())

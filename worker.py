@@ -1,174 +1,129 @@
-# worker.py — JRAVIS Automation Brain (Full 30-stream Engine + Human/Robot Hybrid)
+#!/usr/bin/env python3
 """
-JRAVIS Worker Engine
---------------------
-This file runs in a separate Render worker service.
-It performs:
-- Phase-1/2/3 daily cycles
-- Gmail auto-reply + smart filtering
-- Human-mode (slow, random delays)
-- Robot-mode (instant execution)
-- 30 streams execution engine
-- Daily/weekly reports (API triggers)
-- Auto-self-heal, safe-mode startup
+JRAVIS BACKGROUND WORKER — Phase-1 Engine
+-----------------------------------------
+Runs 24/7 on Render.
 
-This worker NEVER exposes endpoints → pure background engine.
+This worker does:
+ - Phase 1 automated batch generation
+ - Gmail auto-reply (optional)
+ - Safe scheduling
 """
 
-import os
 import time
-import random
 import logging
-import threading
-from datetime import datetime, timedelta
+from datetime import datetime
 
-# ----------------------------------------------------
-# CONFIG
-# ----------------------------------------------------
-MODE = os.getenv("JRAVIS_MODE", "human")  # human / robot
-GMAIL_POLL_SEC = int(os.getenv("GMAIL_POLL_SEC", "45"))
-PHASE_ENGINE_INTERVAL = int(os.getenv("PHASE_ENGINE_INTERVAL",
-                                      "900"))  # 15 min
-REPORT_TRIGGER_URL = os.getenv("REPORT_TRIGGER_URL", "")
-REPORT_API_CODE = os.getenv("REPORT_API_CODE", "2040")
+# ----------------------------------------
+#  PHASE-1 HANDLER IMPORTS (Corrected)
+# ----------------------------------------
+from p1_instagram_handler import run_instagram_handler
+from p1_printify_handler import run_printify_handler
+from p1_meshy_handler import run_meshy_handler
+from p1_cadcrowd_handler import run_cadcrowd_handler
+from p1_contentmarket_handler import run_contentmarket_handler
+from p1_youtube_handler import run_youtube_handler
+from p1_stock_handler import run_stock_handler
+from p1_kdp_handler import run_kdp_handler
+from p1_shopify_handler import run_shopify_handler
+from p1_stationery_handler import run_stationery_handler
 
-# Stream handler registry
-from p1_instagram_handler import InstagramHandler
-from p1_printify_handler import PrintifyHandler
-from p1_meshy_handler import MeshyHandler
-from p1_cadcrowd_handler import CadCrowdHandler
-from p1_contentmarket_handler import ContentMarketHandler
-from p1_youtube_handler import YouTubeHandler
-from p1_stock_handler import StockHandler
-from p1_kdp_handler import KDPHandler
-from p1_shopify_handler import ShopifyHandler
-from p1_stationery_handler import StationeryHandler
-
-STREAMS = [
-    InstagramHandler(),
-    PrintifyHandler(),
-    MeshyHandler(),
-    CadCrowdHandler(),
-    ContentMarketHandler(),
-    YouTubeHandler(),
-    StockHandler(),
-    KDPHandler(),
-    ShopifyHandler(),
-    StationeryHandler(),
-]
+# Gmail Auto Reply
+from email_auto_reply import process_incoming_emails
 
 
-# ----------------------------------------------------
-# HYBRID MODE ENGINE
-# ----------------------------------------------------
-def human_delay():
-    """Simulates human behaviour: slow, random, natural typing speed."""
-    delay = random.uniform(2.0, 6.5)
-    time.sleep(delay)
+# ----------------------------------------
+#  MASTER PHASE-1 EXECUTION FUNCTION
+# ----------------------------------------
+def run_phase1_cycle():
+    logging.info("🚀 Phase-1 Cycle Started")
 
+    results = {}
 
-def robot_delay():
-    """Instant action mode."""
-    time.sleep(0.1)
-
-
-def jr_delay():
-    """Auto-switches based on MODE env variable."""
-    if MODE == "human":
-        human_delay()
-    else:
-        robot_delay()
-
-
-# ----------------------------------------------------
-# STREAM EXECUTION ENGINE
-# ----------------------------------------------------
-def run_all_streams():
-    logging.info("🚀 JRAVIS Worker: Running all 30-stream Phase Engine...")
-
-    for stream in STREAMS:
-        try:
-            logging.info(f"🟦 Running stream handler: {stream.name}")
-            stream.run(jr_delay)
-        except Exception as e:
-            logging.error(f"❌ Stream {stream.name} failed: {e}")
-            continue
-
-    logging.info("✅ All streams executed.")
-
-
-# ----------------------------------------------------
-# DAILY REPORT ENGINE
-# ----------------------------------------------------
-def trigger_daily_report():
-    if not REPORT_TRIGGER_URL:
-        logging.warning("Daily report URL not configured.")
-        return
-
-    import requests
     try:
-        url = f"{REPORT_TRIGGER_URL}?code={REPORT_API_CODE}"
-        r = requests.get(url, timeout=25)
-        logging.info(f"📨 Daily report triggered → {r.status_code}")
+        results["instagram"] = run_instagram_handler()
+        logging.info("Instagram handler finished.")
     except Exception as e:
-        logging.error(f"Daily report trigger failed: {e}")
+        results["instagram"] = f"Error: {e}"
+
+    try:
+        results["printify"] = run_printify_handler()
+        logging.info("Printify handler finished.")
+    except Exception as e:
+        results["printify"] = f"Error: {e}"
+
+    try:
+        results["meshy"] = run_meshy_handler()
+        logging.info("Meshy handler finished.")
+    except Exception as e:
+        results["meshy"] = f"Error: {e}"
+
+    try:
+        results["cadcrowd"] = run_cadcrowd_handler()
+        logging.info("CadCrowd handler finished.")
+    except Exception as e:
+        results["cadcrowd"] = f"Error: {e}"
+
+    try:
+        results["contentmarket"] = run_contentmarket_handler()
+        logging.info("ContentMarket handler finished.")
+    except Exception as e:
+        results["contentmarket"] = f"Error: {e}"
+
+    try:
+        results["youtube"] = run_youtube_handler()
+        logging.info("YouTube handler finished.")
+    except Exception as e:
+        results["youtube"] = f"Error: {e}"
+
+    try:
+        results["stock"] = run_stock_handler()
+        logging.info("Stock handler finished.")
+    except Exception as e:
+        results["stock"] = f"Error: {e}"
+
+    try:
+        results["kdp"] = run_kdp_handler()
+        logging.info("KDP handler finished.")
+    except Exception as e:
+        results["kdp"] = f"Error: {e}"
+
+    try:
+        results["shopify"] = run_shopify_handler()
+        logging.info("Shopify handler finished.")
+    except Exception as e:
+        results["shopify"] = f"Error: {e}"
+
+    try:
+        results["stationery"] = run_stationery_handler()
+        logging.info("Stationery Export handler finished.")
+    except Exception as e:
+        results["stationery"] = f"Error: {e}"
+
+    logging.info("🔥 Phase-1 FULL cycle completed.")
+
+    return results
 
 
-# ----------------------------------------------------
-# PHASE LOOP
-# ----------------------------------------------------
-def phase_engine_loop():
+# ----------------------------------------
+#  MAIN WORKER LOOP (Runs 24/7)
+# ----------------------------------------
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s [%(levelname)s] %(message)s")
+
+    logging.info("💚 JRAVIS Background Worker Started")
+
     while True:
-        run_all_streams()
-        logging.info("⏳ Sleeping until next Phase Engine cycle...")
-        time.sleep(PHASE_ENGINE_INTERVAL)
+        try:
+            # Gmail Auto Reply Engine
+            process_incoming_emails()
 
+            # Phase-1 Auto Execution
+            run_phase1_cycle()
 
-# ----------------------------------------------------
-# GMAIL LOOP (simplified placeholder)
-# ----------------------------------------------------
-def gmail_loop():
-    while True:
-        logging.info("📧 Checking Gmail inbox (smart auto-reply)...")
-        # Placeholder — real gmail processor goes here
-        time.sleep(GMAIL_POLL_SEC)
+        except Exception as e:
+            logging.error(f"🔥 Worker error: {e}")
 
-
-# ----------------------------------------------------
-# DAILY REPORT LOOP
-# ----------------------------------------------------
-def daily_report_loop():
-    while True:
-        now = datetime.now().strftime("%H:%M")
-        if now == "10:00":
-            trigger_daily_report()
-            time.sleep(70)
-        time.sleep(20)
-
-
-# ----------------------------------------------------
-# STARTUP
-# ----------------------------------------------------
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-)
-
-logging.info("🚀 JRAVIS Worker Booting — Hybrid Mode Active")
-logging.info(f"MODE = {MODE}")
-
-# Start threads
-threading.Thread(target=phase_engine_loop, daemon=True).start()
-threading.Thread(target=gmail_loop, daemon=True).start()
-threading.Thread(target=daily_report_loop, daemon=True).start()
-
-logging.info("🔥 JRAVIS Worker online — running continuous automation.")
-
-
-# Keep alive
-def keep_alive():
-    while True:
-        time.sleep(999)
-
-
-keep_alive()
+        # Wait before the next cycle (20 minutes)
+        time.sleep(1200)

@@ -13,176 +13,118 @@ def ensure_dir():
         os.makedirs(BASE_PATH, exist_ok=True)
 
 
-# ----------------------------------------------
-# 🔥 Book Niches (High Demand 2025)
-# ----------------------------------------------
-KDP_NICHES = [
-    "Daily Productivity Journal", "Motivational Quote Book",
-    "Gratitude Journal", "Kids Activity Book", "Adult Coloring Book",
-    "Fitness Tracker Planner", "Budget Planner", "Goal Setting Workbook",
-    "Mindfulness Journal", "Affirmation Notebook"
-]
+# ---------------------------
+# 🎯 Generate 10 KDP Book Niches (high-demand, low-competition)
+# ---------------------------
+def generate_kdp_niches():
+    niches = [
+        "Mindset & Personal Growth",
+        "Teen Motivation Workbook",
+        "AI for Beginners",
+        "Manifestation & Law of Attraction",
+        "Small Business Side-Hustle Guide",
+        "Anxiety Relief Workbook",
+        "Productivity System for Entrepreneurs",
+        "Daily Gratitude Journal",
+        "Fitness + Habit Tracker",
+        "Parenting Hacks for Busy Moms",
+    ]
+    return random.sample(niches, 10)
 
 
-# ----------------------------------------------
-# 🔥 Title Generator
-# ----------------------------------------------
-def generate_title(niche):
+# ---------------------------
+# 🎯 Title Generator
+# ---------------------------
+def generate_titles(niches):
     templates = [
-        "{} — Improve Your Daily Life", "{} — 30 Day Guide",
-        "{} for Busy People", "{}: A Simple System", "{} Workbook",
-        "{} for Beginners"
-    ]
-    return random.choice(templates).format(niche)
-
-
-# ----------------------------------------------
-# 🔥 Subtitle Generator
-# ----------------------------------------------
-def generate_subtitle(niche):
-    return f"A guided {niche.lower()} designed for clarity, growth, and self-improvement."
-
-
-# ----------------------------------------------
-# 🔥 Description
-# ----------------------------------------------
-def generate_description(niche):
-    return f"""
-Unlock the power of {niche.lower()} with this professionally designed book.
-Whether you're a beginner or experienced, this guide will help you stay
-consistent, motivated, and inspired each day.
-
-Perfect for:
-• Personal growth  
-• Productivity  
-• Stress relief  
-• Creativity  
-
-Start your journey today!
-"""
-
-
-# ----------------------------------------------
-# 🔥 7 Keyword Slots
-# ----------------------------------------------
-def generate_keywords(niche):
-    base = [
-        "journal", "planner", "notebook", "guide", "self improvement",
-        "daily growth"
-    ]
-    niche_words = niche.lower().split()
-    return list(set(base + niche_words))[:7]
-
-
-# ----------------------------------------------
-# 🔥 Categories (BISAC / KDP)
-# ----------------------------------------------
-def generate_categories():
-    return [
-        random.choice([
-            "Self-Help / Personal Growth", "Body, Mind & Spirit / Inspiration",
-            "Crafts & Hobbies / General"
-        ]),
-        random.choice([
-            "Juvenile / Activity Books", "Health & Fitness / General",
-            "Business & Economics / Productivity"
-        ])
+        "The Ultimate Guide to {}",
+        "{} — A Complete Beginner Handbook",
+        "Unlock Your Potential with {}",
+        "{}: How to Transform Your Life Fast",
+        "{} Workbook: Daily Skill-Building Approach",
+        "{} Made Simple (2025 Edition)",
     ]
 
+    titles = []
+    for n in niches:
+        template = random.choice(templates)
+        titles.append(template.format(n))
 
-# ----------------------------------------------
-# 🔥 Interior Prompt Generator
-# ----------------------------------------------
-def generate_interiors(niche):
-    return f"""
-Generate a clean, printable interior for: {niche}.
-Page size: 6x9 inch
-Style: Minimal layout, high contrast, book-ready lines, black & white.
-Include 100–120 pages with consistent formatting.
-
-(Example: journal pages, tracking boxes, doodle sections, activity puzzles based on niche.)
-"""
+    return titles
 
 
-# ----------------------------------------------
-# 🔥 Cover Prompt Generator
-# ----------------------------------------------
-def generate_cover_prompt(niche):
-    return f"Create a high-quality KDP cover for a {niche}, 6x9 inch, bold typography, minimal clean design, strong contrast."
+# ---------------------------
+# 🎯 Chapter Outline Generator
+# ---------------------------
+def generate_chapters(title):
+    outline = [
+        "Introduction — Why This Matters",
+        "Core Principles Explained",
+        "Step-by-Step Practical Guide",
+        "Real Life Examples",
+        "Daily / Weekly Action Plan",
+        "Common Mistakes to Avoid",
+        "Advanced Techniques",
+        "Final Summary & Next Steps",
+    ]
+
+    return {"title": title, "chapters": outline}
 
 
-# ----------------------------------------------
-# 🔥 Page Count
-# ----------------------------------------------
-def generate_page_count():
-    return random.choice([100, 120, 150])
-
-
-# ----------------------------------------------
-# 🔥 Save JSON batch
-# ----------------------------------------------
-def save_output(batch):
+# ---------------------------
+# 🎯 Save Output JSON
+# ---------------------------
+def save_output(niches, titles, outlines):
     ensure_dir()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     file_path = BASE_PATH + f"kdp_batch_{timestamp}.json"
 
+    data = {
+        "timestamp": timestamp,
+        "niches": niches,
+        "titles": titles,
+        "outlines": outlines
+    }
+
     with open(file_path, "w") as f:
-        json.dump(batch, f, indent=4)
+        json.dump(data, f, indent=4)
 
     return file_path
 
 
-# ----------------------------------------------
-# 🔥 MAIN HANDLER
-# ----------------------------------------------
+# ---------------------------
+# 🎯 MAIN HANDLER FUNCTION
+# ---------------------------
 def run_kdp_handler():
+    niches = generate_kdp_niches()
+    titles = generate_titles(niches)
 
-    niches = random.sample(KDP_NICHES, 8)
-    books = []
+    outlines = []
+    for t in titles:
+        outlines.append(generate_chapters(t))
 
-    for niche in niches:
-        books.append({
-            "niche": niche,
-            "title": generate_title(niche),
-            "subtitle": generate_subtitle(niche),
-            "description": generate_description(niche),
-            "keywords": generate_keywords(niche),
-            "categories": generate_categories(),
-            "interior_prompt": generate_interiors(niche),
-            "cover_prompt": generate_cover_prompt(niche),
-            "page_count": generate_page_count()
-        })
-
-    batch = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "book_count": len(books),
-        "books": books
-    }
-
-    file_path = save_output(batch)
+    file_path = save_output(niches, titles, outlines)
 
     return {
         "status":
         "success",
         "message":
-        "KDP batch generated.",
+        "KDP batch generated successfully",
         "file":
         file_path,
         "count":
-        len(books),
-        "upload_instructions":
+        len(titles),
+        "instructions":
         """
-KDP UPLOAD:
-1. Use interior_prompt → generate interior PDF (100–120 pages).
-2. Use cover_prompt → generate front + back cover.
-3. Upload interior + cover on KDP manually.
-4. Paste title, subtitle, description, keywords.
-5. Choose generated categories.
-6. Publish (takes 72 hours for approval).
-"""
+1. Open the JSON file.
+2. Choose 1–3 titles for book publishing.
+3. Use the generated outline as your chapter structure.
+4. Use any AI writer (ChatGPT / Claude / Gemini) to expand each chapter.
+5. Format in Word → Save as PDF → Upload to Amazon KDP manually.
+        """
     }
 
 
-# Debug
 if __name__ == "__main__":
     print(run_kdp_handler())

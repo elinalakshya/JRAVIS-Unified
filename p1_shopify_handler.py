@@ -7,159 +7,147 @@ from datetime import datetime
 
 BASE_PATH = "/mnt/data/phase1/shopify/"
 
+
 def ensure_dir():
     if not os.path.exists(BASE_PATH):
         os.makedirs(BASE_PATH, exist_ok=True)
 
 
-# ---------------------------------------------
-# 🔥 Shopify Digital Product Themes
-# ---------------------------------------------
-SHOPIFY_THEMES = [
-    "Digital Planner (GoodNotes/Notability)",
-    "Printable Wall Art",
-    "Business Branding Kit",
-    "Social Media Template Pack",
-    "Minimalist Icon Set",
-    "Podcast Cover Templates",
-    "E-book Template Pack",
-    "Fitness & Meal Planner",
-    "Wedding Invitation Suite",
-    "Canva Instagram Post Bundle",
-    "Daily Affirmation Cards",
-    "Productivity Dashboard Template"
-]
+# ---------------------------
+# 🛍️ DIGITAL PRODUCT NICHES
+# ---------------------------
+def generate_product_niches():
+    niches = [
+        "Canva Templates",
+        "Instagram Post Packs",
+        "Ebook Templates",
+        "Resume / CV Templates",
+        "Business Planner",
+        "Financial Budget Sheets",
+        "Social Media Growth Guides",
+        "AI Prompt Packs",
+        "Digital Stickers",
+        "Printable Journals",
+        "Fitness Trackers",
+        "SEO Workbook",
+    ]
+    return random.sample(niches, 10)
 
 
-# ---------------------------------------------
-# 🔥 Title Generator
-# ---------------------------------------------
-def generate_title(theme):
-    return f"{theme} — Editable Digital Download"
+# ---------------------------
+# 🛍️ PRODUCT TITLE GENERATOR
+# ---------------------------
+def generate_product_titles(niches):
+    templates = [
+        "{} Mega Pack (Editable)",
+        "{} Bundle — Viral + Trending",
+        "{} (PRO Edition)",
+        "{} Toolkit for Entrepreneurs",
+        "{} System — 2025 Edition",
+        "{} Digital Pack (Instant Download)",
+    ]
+
+    titles = []
+
+    for n in niches:
+        template = random.choice(templates)
+        titles.append(template.format(n))
+
+    return titles
 
 
-# ---------------------------------------------
-# 🔥 Description Generator
-# ---------------------------------------------
-def generate_description(theme):
-    return f"""
-This premium {theme} includes everything you need to simplify your daily life,
-grow your business, or improve your productivity.
+# ---------------------------
+# 🛍️ PRODUCT DESCRIPTION GENERATOR
+# ---------------------------
+def generate_descriptions(titles):
+    descriptions = []
+    for t in titles:
+        desc = f"""
+Introducing the **{t}** — a powerful digital bundle designed for creators,
+entrepreneurs, and business owners.
 
 ✔ Fully editable  
-✔ High-resolution  
-✔ Instant digital download  
-✔ Perfect for personal or commercial use  
+✔ Instant download  
+✔ Designed for Shopify / Etsy / Creative Market  
+✔ High-demand niche product  
+✔ Scalable for passive income  
 
-Delivered instantly after purchase.
+Perfect for selling across 20+ global digital platforms.
+
 """
+        descriptions.append(desc.strip())
+
+    return descriptions
 
 
-# ---------------------------------------------
-# 🔥 Tag Generator
-# ---------------------------------------------
-def generate_tags(theme):
-    base = ["digital", "template", "download", "editable", "shopify", "printable"]
-    theme_words = [w.lower() for w in theme.split() if len(w) > 3]
-    return list(set(base + theme_words))
+# ---------------------------
+# 🛍️ THUMBNAIL PROMPTS
+# ---------------------------
+def generate_thumbnail_prompts(titles):
+    prompts = []
+
+    for t in titles:
+        prompts.append(
+            f"High-quality digital product thumbnail, modern flat lay, clean white background, bold pastel accents. Include text: '{t}'."
+        )
+
+    return prompts
 
 
-# ---------------------------------------------
-# 🔥 Thumbnail Prompt
-# ---------------------------------------------
-def generate_thumbnail_prompt(theme):
-    return (
-        f"Create a clean aesthetic Shopify thumbnail for a '{theme}' digital product. "
-        "Minimal design, pastel tones, high clarity, professional layout."
-    )
-
-
-# ---------------------------------------------
-# 🔥 Digital File Creation Prompt
-# ---------------------------------------------
-def generate_file_prompt(theme):
-    return f"""
-Generate the complete digital product bundle for: {theme}.
-Include:
-• Editable source files (Canva/PSD/Figma)
-• Printable PDF version
-• High-resolution JPG/PNG previews
-• Organized folder structure
-"""
-
-
-# ---------------------------------------------
-# 🔥 Category Selector
-# ---------------------------------------------
-def generate_category():
-    return random.choice([
-        "Business",
-        "Productivity",
-        "Design Templates",
-        "Lifestyle",
-        "Aesthetic Printables",
-        "Marketing Resources"
-    ])
-
-
-# ---------------------------------------------
-# 🔥 Save Batch
-# ---------------------------------------------
-def save_output(batch):
+# ---------------------------
+# 🛍️ SAVE OUTPUT JSON
+# ---------------------------
+def save_output(niches, titles, descriptions, thumbnails):
     ensure_dir()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    data = {
+        "timestamp": timestamp,
+        "niches": niches,
+        "titles": titles,
+        "descriptions": descriptions,
+        "thumbnails": thumbnails,
+    }
+
     file_path = BASE_PATH + f"shopify_batch_{timestamp}.json"
 
     with open(file_path, "w") as f:
-        json.dump(batch, f, indent=4)
+        json.dump(data, f, indent=4)
 
     return file_path
 
 
-# ---------------------------------------------
-# 🔥 MAIN HANDLER
-# ---------------------------------------------
+# ---------------------------
+# 🛍️ MAIN HANDLER (called by JRAVIS)
+# ---------------------------
 def run_shopify_handler():
+    niches = generate_product_niches()
+    titles = generate_product_titles(niches)
+    descriptions = generate_descriptions(titles)
+    thumbnails = generate_thumbnail_prompts(titles)
 
-    themes = random.sample(SHOPIFY_THEMES, 10)
-    products = []
-
-    for theme in themes:
-        products.append({
-            "theme": theme,
-            "title": generate_title(theme),
-            "description": generate_description(theme),
-            "tags": generate_tags(theme),
-            "thumbnail_prompt": generate_thumbnail_prompt(theme),
-            "file_prompt": generate_file_prompt(theme),
-            "category": generate_category()
-        })
-
-    batch = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "product_count": len(products),
-        "products": products
-    }
-
-    file_path = save_output(batch)
+    file_path = save_output(niches, titles, descriptions, thumbnails)
 
     return {
-        "status": "success",
-        "message": "Shopify digital product batch generated.",
-        "file": file_path,
-        "count": len(products),
-        "upload_instructions": """
-SHOPIFY UPLOAD STEPS:
-1. Use file_prompt to generate digital files (ZIP recommended).
-2. Use thumbnail_prompt for preview images.
-3. Add title, description, tags.
-4. Set price and publish.
-5. Upload manually (Shopify apps prohibit automation).
-"""
+        "status":
+        "success",
+        "message":
+        "Shopify Digital Product batch generated",
+        "file":
+        file_path,
+        "count":
+        len(titles),
+        "instructions":
+        """
+1. Open the JSON file.
+2. Select 1–3 products to publish on Shopify.
+3. Use the thumbnail prompt to generate thumbnail images.
+4. Upload title + description manually to Shopify.
+5. Attach your digital file (PDF, PNG, templates).
+        """
     }
 
 
-# Debug
 if __name__ == "__main__":
     print(run_shopify_handler())
