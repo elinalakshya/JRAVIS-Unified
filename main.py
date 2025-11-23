@@ -5,29 +5,27 @@ JRAVIS Backend (MAIN) — Clean Architecture B
 This file is ONLY the API + Dashboard + Command Interface.
 
 All automation (scheduler, gmail, daily reports, phase cycles)
-is inside worker.py, running as a separate background process.
+runs inside worker.py or other workers separately.
 
-This keeps the server FAST, CLEAN, and NON-BLOCKING.
+This file must stay ASGI SAFE for Render (gunicorn + uvicorn worker).
 """
 
 import os
 import logging
 from datetime import datetime
-from flask import Flask, jsonify, request, render_template_string
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
-# Phase-1 Queue Engine
+# ---------------------------
+# FLASK APP  (WSGI)
+# ---------------------------
+from flask import Flask, jsonify, request
+
+# Phase-1 Engine
 from p1_queue_engine import activate_phase1_fullpower_cycle
 
-# ======================================================================
-# 1️⃣ FLASK APP (Dashboard + Commands)
-# ======================================================================
-app = Flask(__name__)
+flask_app = Flask(__name__)
 
 
-@app.route("/", methods=["GET"])
+@flask_app.route("/", methods=["GET"])
 def root():
     return jsonify({
         "status": "ok",
@@ -36,7 +34,7 @@ def root():
     }), 200
 
 
-@app.route("/health", methods=["GET"])
+@flask_app.route("/health", methods=["GET"])
 def health():
     return jsonify({
         "status": "ok",
@@ -45,9 +43,9 @@ def health():
     }), 200
 
 
-@app.route("/command", methods=["POST"])
+@flask_app.route("/command", methods=["POST"])
 def command():
-    """Manual command endpoint for Phase-1 cycle."""
+    """Manual Phase-1 activation command."""
     data = request.get_json(force=True)
     cmd = data.get("cmd", "").lower().strip()
 
@@ -61,67 +59,47 @@ def command():
     return jsonify({"status": "unknown_command"}), 400
 
 
-# ======================================================================
-# 2️⃣ SIMPLE DASHBOARD (FastAPI)
-# ======================================================================
+# ---------------------------
+# FASTAPI Dashboard (ASGI)
+# ---------------------------
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.wsgi import WSGIMiddleware
+
 api = FastAPI(title="JRAVIS Dashboard API")
 
-api.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+api.add_middleware(CORSMiddleware,
+                   allow_origins=["*"],
+                   allow_methods=["*"],
+                   allow_headers=["*"])
 
 
 @api.get("/summary")
-def get_dashboard_summary():
+def get_summary():
     return {
         "system": "JRAVIS Dashboard",
-        "today": datetime.utcnow().isoformat(),
         "status": "running",
+        "time": datetime.utcnow().isoformat(),
         "note": "Dashboard API responding normally."
     }
 
 
-# ======================================================================
-# 3️⃣ ASGI SERVER (Flask + FastAPI Mounted Correctly)
-# ======================================================================
-from fastapi import FastAPI
-from starlette.middleware.wsgi import WSGIMiddleware
-from fastapi.middleware.cors import CORSMiddleware
-
+# ---------------------------
+# UNIFIED ASGI SERVER
+# ---------------------------
 asgi_app = FastAPI(title="JRAVIS Unified Server")
 
 # CORS
-asgi_app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+asgi_app.add_middleware(CORSMiddleware,
+                        allow_origins=["*"],
+                        allow_methods=["*"],
+                        allow_headers=["*"])
 
-# Mount Flask (as WSGI)
-asgi_app.mount("/", WSGIMiddleware(app))
+# mount Flask WSGI inside ASGI
+asgi_app.mount("/", WSGIMiddleware(flask_app))
 
-# Mount FastAPI under /api
+# mount FastAPI at /api
 asgi_app.mount("/api", api)
 
-application = asgi_app  # This is the ASGI app Gunicorn/Uvicorn should run
-
-# ======================================================================
-# 4️⃣ STARTUP SERVER
-# ======================================================================
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s [%(levelname)s] %(message)s")
-
-    port = int(os.getenv("PORT", 8080))
-    logging.info(f"🚀 JRAVIS Main Server starting on port {port}")
-
-    from werkzeug.serving import run_simple
-    run_simple("0.0.0.0",
-               port,
-               application,
-               use_reloader=False,
-               use_debugger=False)
+# Export for Gunicorn/Uvicorn
+application = asgi_app
