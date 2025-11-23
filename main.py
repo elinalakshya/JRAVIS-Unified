@@ -45,18 +45,15 @@ def health():
 
 @flask_app.route("/command", methods=["POST"])
 def command():
-    """Manual Phase-1 activation command."""
-    data = request.get_json(force=True)
-    cmd = data.get("cmd", "").lower().strip()
+    if cmd in ["activate_phase_1", "begin_phase_1", "phase1_start"]:
+        return jsonify({"status": "ok", "phase": "1 activated"}), 200
 
-    if cmd in [
-            "begin_phase_1", "start_phase_1", "phase1_start",
-            "begin_phase_1_cycle", "jravis begin phase 1 cycle"
-    ]:
-        result = activate_phase1_fullpower_cycle()
-        return jsonify(result), 200
+    if cmd in ["activate_phase_2", "begin_phase_2", "phase2_start"]:
+        return jsonify({"status": "ok", "phase": "2 activated"}), 200
 
-    return jsonify({"status": "unknown_command"}), 400
+    if cmd in ["activate_phase_3", "begin_phase_3", "phase3_start"]:
+        return jsonify({"status": "ok", "phase": "3 activated"}), 200
+
 
 
 # ---------------------------
