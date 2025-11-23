@@ -77,6 +77,7 @@ class VAInterface:
         # Build PDF, lock with code, email to Boss
         pass
 
+<<<<<<< HEAD
     from datetime import datetime
 
     class VAInterface:
@@ -140,6 +141,70 @@ class VAInterface:
             # your existing logic: build summary PDF (locked) + invoice PDF and send
             pass
 
+=======
+from datetime import datetime
+
+class VAInterface:
+    # ...existing methods...
+
+    def send_report(self, data, recipient):
+        """Build and email the daily JRAVIS report to Boss at 10:00 AM IST."""
+        today = datetime.now().strftime("%d-%m-%Y")
+
+        # These should come from your tracking DB / sheets
+        work_yesterday   = data.get("work_yesterday", [])
+        work_today       = data.get("work_today", [])
+        work_tomorrow    = data.get("work_tomorrow", [])
+        issues_resolved  = data.get("issues_resolved", [])
+        journey_progress = data.get("journey_progress_text", "")
+        progress_bar     = data.get("progress_bar_text", "")
+        approval_link    = data.get("approval_link", "https://jravis/approve/today")  # placeholder
+
+        subject = f"JRAVIS Daily Report | {today}"
+
+        body = f"""
+JRAVIS Daily Report – {today}
+
+1️⃣ What work was done yesterday:
+{self._format_list(work_yesterday)}
+
+2️⃣ What work is being done today:
+{self._format_list(work_today)}
+
+3️⃣ What work is planned for tomorrow:
+{self._format_list(work_tomorrow)}
+
+4️⃣ Issues while working + resolutions:
+{self._format_list(issues_resolved)}
+
+5️⃣ How far we have travelled in our journey:
+{journey_progress}
+
+📊 Progress Bar (Streams + Income):
+{progress_bar}
+
+✅ Approval Link (auto-continue in 10 mins if no action):
+{approval_link}
+"""
+
+        # TODO: replace this with your real email send + PDF attach + lock code
+        self._send_email_with_pdfs(
+            to=recipient,
+            subject=subject,
+            body=body,
+            lock_code="JRV2040_LOCKED_KEY_001",
+        )
+
+    def _format_list(self, items):
+        if not items:
+            return "- (No data logged)"
+        return "\n".join(f"- {item}" for item in items)
+
+    def _send_email_with_pdfs(self, to, subject, body, lock_code):
+        # your existing logic: build summary PDF (locked) + invoice PDF and send
+        pass
+    
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
     def generate_weekly_report(self):
         # Weekly summary & invoices
         pass

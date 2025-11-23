@@ -44,6 +44,7 @@ module.exports = {
   },
   plugins: [],
 };
+<<<<<<< HEAD
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -76,3 +77,5 @@ export default {
   },
   plugins: [],
 };
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322

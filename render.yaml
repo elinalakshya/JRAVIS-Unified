@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ================================================
 # JRAVIS DAILY REPORT - Independent Render Worker
 # ================================================
@@ -22,3 +23,25 @@ cronJobs:
     schedule: "30 4 * * *"   # 10:00 AM IST
     service: jravis-daily-report
     command: "python -m jravis.scripts.jravis_daily_report"
+=======
+services:
+  - type: web
+    name: jravis-backend
+    runtime: docker
+    repo: https://github.com/elinalakshya/jravis-brain
+    rootDir: jravis-backend
+    dockerfilePath: jravis-backend/Dockerfile
+    dockerContext: jravis-backend
+    plan: starter
+    envVars:
+      - key: REPORT_API_CODE
+        value: "2040"
+      - key: LOCK_CODE
+        value: "my-lock-code"
+      - key: VA_EMAIL
+        value: "yourgmail@gmail.com"
+      - key: VA_EMAIL_PASS
+        value: "your-app-password"
+      - key: REPORT_RECIPIENT
+        value: "nrveeresh327@gmail.com"
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322

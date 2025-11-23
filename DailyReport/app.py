@@ -15,6 +15,7 @@ IST = ZoneInfo("Asia/Kolkata")
 UTC = ZoneInfo("UTC")
 
 from pathlib import Path
+<<<<<<< HEAD
 
 STATE_FILE = Path("DailyReport/.last_sent.txt")
 
@@ -23,13 +24,23 @@ def _today_str():
     return datetime.now(IST).strftime("%Y-%m-%d")
 
 
+=======
+STATE_FILE = Path("DailyReport/.last_sent.txt")
+
+def _today_str():
+    return datetime.now(IST).strftime("%Y-%m-%d")
+
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 def sent_today():
     try:
         return STATE_FILE.read_text().strip() == _today_str()
     except FileNotFoundError:
         return False
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 def mark_sent_today():
     STATE_FILE.write_text(_today_str())
 
@@ -78,9 +89,13 @@ def attach_file(msg, path, filename):
 
 def send_email_now():
     try:
+<<<<<<< HEAD
         html = f"<p>Boss, daily report for {datetime.now(IST).strftime('%d-%m-%Y')} ✅</p>" + "<p><b>Phase 1:</b><br>" + (
             run_phase1_now()[2]
             if False else "Will run at 10:05 AM IST") + "</p>"
+=======
+        html = f"<p>Boss, daily report for {datetime.now(IST).strftime('%d-%m-%Y')} ✅</p>" + "<p><b>Phase 1:</b><br>" + (run_phase1_now()[2] if False else "Will run at 10:05 AM IST") + "</p>"
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
         files = build_files()
         msg = MIMEMultipart()
         msg["From"] = FROM_EMAIL
@@ -121,6 +136,7 @@ def home():
     """
 
 
+<<<<<<< HEAD
 from fastapi import FastAPI, Query
 
 app = FastAPI()
@@ -134,6 +150,8 @@ def send_daily_report(code: str = Query(...)):
     return {"status": "Daily report sent successfully"}
 
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 @app.get("/health")
 def health():
     return jsonify({
@@ -160,8 +178,12 @@ def send_now():
 # ---- Scheduler: daily 10:00 IST ----
 scheduler = BackgroundScheduler(timezone=IST)
 scheduler.add_job(send_email_now, CronTrigger(hour=10, minute=0))
+<<<<<<< HEAD
 scheduler.add_job(lambda: run_phase1_now(),
                   CronTrigger(hour=10, minute=5))  # phase1 at 10:05
+=======
+scheduler.add_job(lambda: run_phase1_now(), CronTrigger(hour=10, minute=5))  # phase1 at 10:05
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 scheduler.start()
 log("Scheduler started (daily 10:00 AM IST).")
 
@@ -191,21 +213,32 @@ if __name__ == "__main__":
     except Exception as e:
         log(f"Port check failed: {e}, falling back to 8000")
 
+<<<<<<< HEAD
     threading.Thread(target=self_ping, args=(port, ), daemon=True).start()
+=======
+    threading.Thread(target=self_ping, args=(port,), daemon=True).start()
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
     log(f"IST now: {datetime.now(IST)} | UTC now: {datetime.now(UTC)}")
     log(f"Serving Flask on port {port}. Health: /health  |  Manual: /send-now")
     app.run(host="0.0.0.0", port=port)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 def run_phase1_now():
     log("⚙️ Phase 1: starting real-work batch now…")
     try:
         results = phase1.run_all()
         # Build a short HTML summary to include in emails
+<<<<<<< HEAD
         lines = [
             f"- {r.get('task')}: {r.get('status')} — {r.get('details')} ({r.get('at')})"
             for r in results
         ]
+=======
+        lines = [f"- {r.get('task')}: {r.get('status')} — {r.get('details')} ({r.get('at')})" for r in results]
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
         summary_html = "<br>".join(lines)
         log("✅ Phase 1 batch completed.")
         return True, results, summary_html
@@ -213,7 +246,10 @@ def run_phase1_now():
         log(f"❌ Phase 1 batch failed: {e}")
         return False, [], f"Phase 1 failed: {e}"
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 @app.get("/phase1/start-now")
 def phase1_start_now():
     ok, results, html = run_phase1_now()

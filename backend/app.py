@@ -47,6 +47,7 @@ def send_weekly_report(code: str = Query(...)):
     return {"status": "Weekly report sent successfully"}
 
 
+<<<<<<< HEAD
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -62,6 +63,8 @@ def root():
     return jsonify({"message": "JRAVIS Daily Report active ✅"})
 
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))

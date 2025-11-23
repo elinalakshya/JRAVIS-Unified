@@ -18,23 +18,35 @@ from vabot.phase1_connectors import CONNECTORS
 # -----------------------------
 app = Flask(__name__)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 @app.route("/")
 def index():
     return "✅ VA Bot is running 24/7 on Render!", 200
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 @app.route("/health")
 def health():
     return "OK", 200
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 @app.route("/send-report")
 def send_report():
     send_daily_report()
     return "Manual report sent ✅", 200
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 # -----------------------------
 # Email Sending Logic
 # -----------------------------
@@ -78,6 +90,7 @@ def send_daily_report():
 
     msg.attach(MIMEText(text, "plain"))
     msg.attach(MIMEText(html, "html"))
+<<<<<<< HEAD
     try:
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", 465,
@@ -102,12 +115,22 @@ def send_daily_report():
                     msg.attach(part)
                 else:
                     print(f"⚠️ Missing file: {file_path}")
+=======
+
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(EMAIL, APP_PASS)
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
             server.sendmail(EMAIL, TO_EMAIL, msg.as_string())
         print(f"✅ Daily report email sent successfully at {now_str}")
     except Exception as e:
         print("❌ Error sending daily report:", e)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 # -----------------------------
 # First Log Confirmation Email
 # -----------------------------
@@ -146,7 +169,10 @@ def send_first_log_confirmation(timestamp):
     except Exception as e:
         print("❌ Error sending first log confirmation:", e)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 # -----------------------------
 # Real Workflow Runner (Phase 1)
 # -----------------------------
@@ -168,6 +194,7 @@ def run_phase1_cycle():
                 raw = conn()
                 # Flatten results for cleaner logs
                 results.append({
+<<<<<<< HEAD
                     "Platform":
                     raw.get("platform", conn.__name__),
                     "Orders":
@@ -186,6 +213,15 @@ def run_phase1_cycle():
                     raw.get("status") or raw.get("note") or "✅ OK",
                     "Timestamp":
                     now_str
+=======
+                    "Platform": raw.get("platform", conn.__name__),
+                    "Orders": raw.get("orders_yesterday") or raw.get("orders") or raw.get("projects_done") or "-",
+                    "Revenue": raw.get("revenue_yesterday") or raw.get("royalties_yesterday") or raw.get("earnings_yesterday") or raw.get("balance") or "-",
+                    "Followers": raw.get("followers") or "-",
+                    "Subscribers": raw.get("subscribers") if "subscribers" in raw else "-",
+                    "Status": raw.get("status") or raw.get("note") or "✅ OK",
+                    "Timestamp": now_str
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
                 })
             except Exception as e:
                 results.append({
@@ -214,7 +250,10 @@ def run_phase1_cycle():
         print("⏳ Sleeping for 1 hour...")
         time.sleep(3600)  # 1 hour
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
 # -----------------------------
 # App Runner
 # -----------------------------

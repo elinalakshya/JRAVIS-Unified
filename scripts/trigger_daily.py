@@ -1,4 +1,5 @@
 # scripts/trigger_daily.py
+<<<<<<< HEAD
 # JRAVIS Daily Report Trigger (for Render Cron)
 # -------------------------------------------------------
 # Calls the backend to generate the daily report, then emails confirmation.
@@ -81,3 +82,32 @@ if __name__ == "__main__":
     print("[trigger_daily] Starting JRAVIS Daily Report Trigger...")
     exit_code = trigger_backend()
     print(f"[trigger_daily] Exiting with code {exit_code}")
+=======
+# Simple, robust trigger for JRAVIS daily report (safe for Render Cron)
+import sys
+import requests
+import time
+
+URL = "https://jravis-backend.onrender.com/api/send_daily_report?code=2040"
+TIMEOUT = 30
+
+
+def main():
+    print(f"[trigger_daily] Calling {URL}")
+    try:
+        r = requests.get(URL, timeout=TIMEOUT)
+        print(f"[trigger_daily] HTTP {r.status_code} - {r.text[:1000]}")
+        if r.status_code == 200:
+            print("[trigger_daily] SUCCESS")
+            return 0
+        else:
+            print("[trigger_daily] FAILED: non-200 status")
+            return 2
+    except Exception as e:
+        print(f"[trigger_daily] ERROR: {e}")
+        return 3
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322

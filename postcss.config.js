@@ -4,6 +4,7 @@ module.exports = {
     autoprefixer: {},
   },
 };
+<<<<<<< HEAD
 
 export default {
   plugins: {
@@ -11,3 +12,5 @@ export default {
     autoprefixer: {},
   },
 };
+=======
+>>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
