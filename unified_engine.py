@@ -1,26 +1,13 @@
-# unified_engine.py
-"""
-MICRO-ENGINE ORCHESTRATOR (Option C)
-------------------------------------
-This file activates 30 separate micro-engines — 1 per stream.
-Each micro-engine runs in HUMAN MODE (slow, natural pacing).
-Content generation inside each engine runs in ROBO MODE (fast + unique).
-
-This orchestrator:
- - Loads all 30 handlers
- - Creates a clean STREAM_MAP
- - Runs them in balanced batches (5 at a time)
- - Applies human-mode timing
- - Logs everything
-"""
-
 import time
 import random
 import logging
 
 # =============================
 # IMPORT ALL 30 MICRO-HANDLERS
+# (MATCHES EXACTLY YOUR REPLIT FILENAMES)
 # =============================
+
+# --- Phase 1 ---
 from p1_instagram_handler import run_instagram_handler
 from p1_printify_handler import run_printify_handler
 from p1_meshy_handler import run_meshy_handler
@@ -32,27 +19,29 @@ from p1_kdp_handler import run_kdp_handler
 from p1_shopify_handler import run_shopify_handler
 from p1_stationery_handler import run_stationery_handler
 
-from p2_template_handler import run_template_handler
-from p2_resellcourses_handler import run_resellcourses_handler
+# --- Phase 2 (your exact filenames) ---
+from p2_templates_handler import run_template_handler  # FIXED
+from p2_courses_handler import run_resellcourses_handler  # FIXED
 from p2_printables_handler import run_printables_handler
 from p2_affiliate_handler import run_affiliate_handler
 from p2_aisaas_handler import run_aisaas_handler
 from p2_newsletter_handler import run_newsletter_handler
-from p2_subbox_handler import run_subbox_handler
-from p2_gamingassets_handler import run_gamingassets_handler
+from p2_subscriptionbox_handler import run_subbox_handler  # FIXED
+from p2_gameassets_handler import run_gamingassets_handler  # FIXED
 from p2_webflow_handler import run_webflow_handler
 from p2_skillshare_handler import run_skillshare_handler
 
-from p3_saasreseller_handler import run_saasreseller_handler
+# --- Phase 3 (your exact filenames) ---
+from p3_saas_reseller_handler import run_saasreseller_handler
 from p3_voiceover_handler import run_voiceover_handler
 from p3_musicbeats_handler import run_musicbeats_handler
-from p3_scripts_handler import run_scripts_handler
 from p3_plugins_handler import run_plugins_handler
 from p3_worksheets_handler import run_worksheets_handler
-from p3_events_handler import run_events_handler
+from p3_virtualevents_handler import run_events_handler  # FIXED
 from p3_resume_handler import run_resume_handler
-from p3_cryptomicro_handler import run_cryptomicro_handler
-from p3_apimarket_handler import run_apimarket_handler
+from p3_crypto_microtasks_handler import run_cryptomicro_handler  # FIXED
+from p3_api_marketplace_handler import run_apimarket_handler  # FIXED
+from p3_webautomation_handler import run_scripts_handler  # FIXED
 
 # =============================
 # STREAM MAP (30 STREAMS)
@@ -90,32 +79,21 @@ STREAM_MAP = {
     30: run_apimarket_handler,
 }
 
-# =============================
-# HUMAN‑MODE TIMING ENGINE
-# =============================
 
-
+# =============================
+# HUMAN MODE DELAYS
+# =============================
 def human_delay():
-    """
-    Natural human-like timing.
-    Small random pauses between actions.
-    """
     time.sleep(random.uniform(1.5, 4.0))
 
 
 def human_block_delay():
-    """
-    Pause between stream batches to mimic
-    real human workflow switching.
-    """
     time.sleep(random.uniform(10, 20))
 
 
 # =============================
-# MAIN MICRO‑ENGINE EXECUTOR
+# RUN SINGLE STREAM
 # =============================
-
-
 def run_stream(stream_id):
     try:
         handler = STREAM_MAP[stream_id]
@@ -123,19 +101,16 @@ def run_stream(stream_id):
         result = handler()
         logging.info(f"✅ Stream {stream_id} completed: {result.get('status')}")
         return result
-
     except Exception as e:
         logging.error(f"❌ Error in stream {stream_id}: {e}")
         return {"status": "error", "stream": stream_id, "error": str(e)}
 
 
 # =============================
-# BALANCED 5-STREAM CYCLE
+# RUN ALL STREAMS
 # =============================
-
-
 def run_all_streams_micro_engine():
-    logging.info("🚀 Starting MICRO‑ENGINE mode for all 30 streams")
+    logging.info("🚀 Starting MICRO-ENGINE mode for all 30 streams")
 
     batch_size = 5
     for i in range(0, 30, batch_size):
