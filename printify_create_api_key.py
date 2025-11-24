@@ -77,7 +77,7 @@ with sync_playwright() as p:
         btn = None
         for text in ("Generate token", "Generate API token", "Create token",
                      "Create API token", "Generate new token"):
-            btn = page.query_selector(f"button:has-text(\"{text}\")")
+            btn = page.query_selector(f"button:has-text("{text}")")
             if btn:
                 print(f"Clicking button '{text}'")
                 btn.click()

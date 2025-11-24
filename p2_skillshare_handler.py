@@ -24,11 +24,11 @@ def generate_course_outlines():
 def save_output(r):
     ensure_dir()
     ts=datetime.now().strftime("%Y%m%d_%H%M%S")
-    fp=f\"{BASE_PATH}skillshare_{ts}.json\"
-    json.dump(r,open(fp,\"w\"),indent=4)
+    fp = f"{BASE_PATH}skillshare_{ts}.json"
+    json.dump(r,open(fp,"w"),indent=4)
     return fp
 
 def run_skillshare_handler():
     r=generate_course_outlines()
     fp=save_output(r)
-    return{\"status\":\"success\",\"file\":fp,\"count\":len(r)}
+    return{"status":"success","file":fp,"count":len(r)}

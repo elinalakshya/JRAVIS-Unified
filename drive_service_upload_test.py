@@ -84,7 +84,7 @@ def encrypt_pdf(input_path, password):
 # DRIVE UTILITIES
 # --------------------------------------------------------
 def find_folder(service, name, parent_id=None):
-    safe_name = name.replace("'", "\\'")
+    safe_name = name.replace("'", "\'")
     q_parts = [
         f"name = '{safe_name}'",
         "mimeType = 'application/vnd.google-apps.folder'"
@@ -131,7 +131,7 @@ def upload_file(service, local_path, drive_folder_id, replace_same_name=True):
         return None
 
     filename = os.path.basename(local_path)
-    safe_filename = filename.replace("'", "\\'")
+    safe_filename = filename.replace("'", "\'")
     q = f"name = '{safe_filename}' and '{drive_folder_id}' in parents"
     existing = service.files().list(q=q,
                                     fields="files(id, name)").execute().get(

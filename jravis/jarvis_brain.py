@@ -53,7 +53,7 @@ Each plan[] item must include: step_id, action, target, params, expected_result,
 def generate_plan(user_command):
     if not OPENAI_API_KEY:
         return {"error": "Missing OPENAI_API_KEY"}
-    prompt = f"User command: \"{user_command}\""
+    prompt = f"User command: "{user_command}""
     resp = openai.ChatCompletion.create(model="gpt-5",
                                         messages=[{
                                             "role": "system",

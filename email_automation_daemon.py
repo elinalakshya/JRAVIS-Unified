@@ -82,7 +82,7 @@ def make_message_with_attachments(sender, to, subject, html_body, attachments):
             part.set_payload(f.read())
         encoders.encode_base64(part)
         part.add_header("Content-Disposition",
-                        f"attachment; filename=\"{os.path.basename(path)}\"")
+                        f"attachment; filename="{os.path.basename(path)}"")
         msg.attach(part)
 
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()

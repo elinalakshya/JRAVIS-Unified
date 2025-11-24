@@ -21,11 +21,11 @@ def generate_box_items():
 def save_output(box):
     ensure_dir()
     ts=datetime.now().strftime("%Y%m%d_%H%M%S")
-    fp=f\"{BASE_PATH}subbox_{ts}.json\"
-    json.dump(box,open(fp,\"w\"),indent=4)
+    fp = f"{BASE_PATH}subbox_{ts}.json"
+    json.dump(box,open(fp,"w"),indent=4)
     return fp
 
 def run_subscriptionbox_handler():
     box=generate_box_items()
     fp=save_output(box)
-    return {\"status\":\"success\",\"file\":fp,\"count\":len(box)}
+    return {"status":"success","file":fp,"count":len(box)}
