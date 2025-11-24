@@ -21,7 +21,7 @@ from p1_stationery_handler import run_stationery_handler
 
 # --- Phase 2 (your exact filenames) ---
 from p2_templates_handler import run_template_handler  # FIXED
-from p2_courses_handler import run_resellcourses_handler  # FIXED
+from p2_courses_handler import run_courses_handler  # FIXED
 from p2_printables_handler import run_printables_handler
 from p2_affiliate_handler import run_affiliate_handler
 from p2_aisaas_handler import run_aisaas_handler
