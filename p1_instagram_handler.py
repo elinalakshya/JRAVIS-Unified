@@ -5,7 +5,7 @@ import json
 import random
 from datetime import datetime
 
-BASE_PATH = "/mnt/data/phase1/instagram/"
+BASE_PATH = "/opt/render/project/src/data/phase1/instagram/"
 
 
 # Ensure directory exists

@@ -3,7 +3,7 @@
 import os, json, random
 from datetime import datetime
 
-BASE_PATH = "/mnt/data/phase2/aisaas/"
+BASE_PATH = "/opt/render/project/src/data/phase2/aisaas/"
 
 
 def ensure_dir():

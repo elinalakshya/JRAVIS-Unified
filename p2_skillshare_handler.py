@@ -3,7 +3,7 @@
 import os,json,random
 from datetime import datetime
 
-BASE_PATH="/mnt/data/phase2/skillshare/"
+BASE_PATH="/opt/render/project/src/data/phase2/skillshare/"
 
 def ensure_dir(): os.makedirs(BASE_PATH,exist_ok=True)
 

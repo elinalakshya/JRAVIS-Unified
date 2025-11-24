@@ -5,7 +5,7 @@ import json
 import random
 from datetime import datetime
 
-BASE_PATH = "/mnt/data/phase1/shopify/"
+BASE_PATH = "/opt/render/project/src/data/phase1/shopify/"
 
 
 def ensure_dir():

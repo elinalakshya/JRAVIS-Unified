@@ -128,7 +128,7 @@ def run_phase1_cycle():
         "errors": ERROR_QUEUE
     }
 
-    pack_path = f"/mnt/data/phase1/daypack_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    pack_path = f"/opt/render/project/src/data/phase1/daypack_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
     with open(pack_path, "w") as f:
         json.dump(daily_pack, f, indent=4)
