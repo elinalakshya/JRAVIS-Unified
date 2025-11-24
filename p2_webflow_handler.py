@@ -1,33 +1,55 @@
 # p2_webflow_handler.py
 
-import os,json,random
+import os
+import json
+import random
 from datetime import datetime
 
-BASE_PATH="/mnt/data/phase2/webflow/"
+BASE_PATH = "/mnt/data/phase2/webflow/"
 
-def ensure_dir(): os.makedirs(BASE_PATH,exist_ok=True)
+
+def ensure_dir():
+    os.makedirs(BASE_PATH, exist_ok=True)
+
 
 def generate_webflow_templates():
-    types=["SaaS Landing","Portfolio","Agency Website","Blog Layout"]
-    res=[]
-    for _ in range(10):
-        t=random.choice(types)
-        res.append({
-            "theme_name":f"{t} Template",
-            "features":["Responsive","SEO Ready","Fast Load","CMS Included"],
-            "pages":random.randint(3,10)
+    categories = [
+        "Landing Page", "Portfolio Website", "Business Homepage",
+        "SaaS Website Layout", "Product Page", "Minimal UI Layout",
+        "Dark Modern Portfolio", "Clean Startup Template", "Agency Homepage"
+    ]
+
+    output = []
+
+    for _ in range(12):
+        c = random.choice(categories)
+        output.append({
+            "title":
+            f"{c} – Premium Webflow Template",
+            "description":
+            f"A modern, responsive {c} template designed for conversions.",
+            "tags":
+            ["webflow", "template",
+             c.lower(), "responsive", "premium"]
         })
-    return res
+
+    return output
+
 
 def save_output(data):
-    os.makedirs(BASE_PATH, exist_ok=True)
+    ensure_dir()
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     fp = f"{BASE_PATH}webflow_{ts}.json"
-    json.dump(data, open(fp, "w"), indent=4)
+    with open(fp, "w") as f:
+        json.dump(data, f, indent=4)
     return fp
 
 
 def run_webflow_handler():
-    r=generate_webflow_templates()
-    fp=save_output(r)
-    return {\"status\":\"success\",\"file\":fp,\"count\":len(r)}
+    data = generate_webflow_templates()
+    fp = save_output(data)
+    return {"status": "success", "file": fp, "count": len(data)}
+
+
+if __name__ == "__main__":
+    print(run_webflow_handler())
