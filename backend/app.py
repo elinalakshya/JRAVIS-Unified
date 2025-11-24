@@ -1,71 +1,30 @@
+# ============================================
+# JRAVIS BACKEND - MAIN APP (FastAPI)
+# ============================================
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import os
 
-app = FastAPI(title="JRAVIS Backend", version="1.0")
+from .dashboard_api import router as dashboard_router
+from .earnings_api import router as earnings_router
+from .payout_api import router as payout_router
+from .invoice_api import router as invoice_router
 
-# Allow CORS for all origins (adjust later if needed)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI(title="JRAVIS Backend API", version="3.0 Unified")
 
-from fastapi import Query
+# Allow dashboard to access backend
+app.add_middleware(CORSMiddleware,
+                   allow_origins=["*"],
+                   allow_methods=["*"],
+                   allow_headers=["*"])
 
-
-@app.get("/api/send_daily_report")
-def send_daily_report(code: str = Query(...)):
-    """Triggered by JRAVIS Daily Report Worker"""
-    if code != "2040":
-        return {"detail": "Unauthorized"}
-
-    # === Your daily report generation logic goes here ===
-    print("[Backend] 🗓️ Generating daily report...")
-
-    # Example: return success message
-    return {"status": "Daily report sent successfully"}
+# Register routes
+app.include_router(dashboard_router)
+app.include_router(earnings_router)
+app.include_router(payout_router)
+app.include_router(invoice_router)
 
 
 @app.get("/")
-def root():
-    return {"status": "JRAVIS Backend running", "version": "1.0"}
-
-
-@app.get("/healthz")
-def health_check():
-    return {"status": "healthy"}
-
-
-@app.get("/api/send_weekly_report")
-def send_weekly_report(code: str = Query(...)):
-    if code != "2040":
-        return {"detail": "Unauthorized"}
-    print("[Backend] 🗓️ Generating weekly report...")
-    return {"status": "Weekly report sent successfully"}
-
-
-<<<<<<< HEAD
-from flask import Flask, jsonify
-
-app = Flask(__name__)
-
-
-@app.route("/health")
-def health():
-    return jsonify({"status": "ok"})
-
-
-@app.route("/")
-def root():
-    return jsonify({"message": "JRAVIS Daily Report active ✅"})
-
-
-=======
->>>>>>> 3ce708d27c5316766c8a0e3476828ac15a402322
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+def home():
+    return {"status": "JRAVIS Backend Running", "version": "3.0 Unified"}

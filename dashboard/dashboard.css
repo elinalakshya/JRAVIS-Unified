@@ -1,0 +1,28 @@
+body {
+  background: #101015;
+  color: #f0f0f0;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.title {
+  text-align: center;
+  color: #00d4ff;
+}
+
+.card {
+  background: #1a1a20;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  border: 1px solid #333;
+}
+
+.card h2 {
+  margin-top: 0;
+  color: #00ffaa;
+}
+
+.loading {
+  color: #888;
+}
