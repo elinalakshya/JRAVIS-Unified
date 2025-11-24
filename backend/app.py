@@ -25,6 +25,6 @@ app.include_router(payout_router)
 app.include_router(invoice_router)
 
 
-@app.get("/")
-def home():
-    return {"status": "JRAVIS Backend Running", "version": "3.0 Unified"}
+@app.get("/healthz")
+def health_check():
+                   return {"status": "ok"}
