@@ -18,13 +18,21 @@ app.add_middleware(CORSMiddleware,
                    allow_methods=["*"],
                    allow_headers=["*"])
 
+
+# Health check endpoint
+@app.get("/healthz")
+def health_check():
+    return {"status": "ok"}
+
+
+# Root endpoint
+@app.get("/")
+def home():
+    return {"status": "JRAVIS Backend Running", "version": "3.0 Unified"}
+
+
 # Register routes
 app.include_router(dashboard_router)
 app.include_router(earnings_router)
 app.include_router(payout_router)
 app.include_router(invoice_router)
-
-
-@app.get("/healthz")
-def health_check():
-                   return {"status": "ok"}
