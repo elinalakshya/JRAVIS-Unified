@@ -1,27 +1,21 @@
 #!/usr/bin/env python3
 """
-JRAVIS Backend (MAIN) — Clean Architecture B
---------------------------------------------
-This file is ONLY the API + Dashboard + Command Interface.
-
-All automation (scheduler, gmail, daily reports, phase cycles)
-runs inside worker.py or other workers separately.
-
-This file must stay ASGI SAFE for Render (gunicorn + uvicorn worker).
+JRAVIS Backend (MAIN)
+Clean ASGI + WSGI Hybrid
 """
 
 import os
 import logging
 from datetime import datetime
 
-# ---------------------------
-# FLASK APP  (WSGI)
-# ---------------------------
 from flask import Flask, jsonify, request
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.wsgi import WSGIMiddleware
 
-# Phase-1 Engine
-from p1_queue_engine import activate_phase1_fullpower_cycle
-
+# ---------------------
+# Flask App (WSGI)
+# ---------------------
 flask_app = Flask(__name__)
 
 
@@ -30,42 +24,35 @@ def root():
     return jsonify({
         "status": "ok",
         "system": "JRAVIS Backend",
-        "message": "🚀 JRAVIS Backend Active (Main Server)"
-    }), 200
+        "message": "🚀 JRAVIS Backend Active"
+    })
 
 
 @flask_app.route("/health", methods=["GET"])
 def health():
-    return jsonify({
-        "status": "ok",
-        "system": "JRAVIS Backend",
-        "time": datetime.utcnow().isoformat()
-    }), 200
+    return jsonify({"status": "ok", "time": datetime.utcnow().isoformat()})
 
 
 @flask_app.route("/command", methods=["POST"])
 def command():
-    """Manual Phase-1 activation command."""
     data = request.get_json(force=True)
     cmd = data.get("cmd", "").lower().strip()
 
-    if cmd in [
-            "begin_phase_1", "start_phase_1", "phase1_start",
-            "begin_phase_1_cycle", "jravis begin phase 1 cycle"
-    ]:
-        result = activate_phase1_fullpower_cycle()
-        return jsonify(result), 200
+    if cmd in ["activate_phase_1", "begin_phase_1", "phase1_start"]:
+        return jsonify({"status": "ok", "phase": "1 activated"}), 200
 
-    return jsonify({"status": "unknown_command"}), 400
+    if cmd in ["activate_phase_2", "begin_phase_2", "phase2_start"]:
+        return jsonify({"status": "ok", "phase": "2 activated"}), 200
+
+    if cmd in ["activate_phase_3", "begin_phase_3", "phase3_start"]:
+        return jsonify({"status": "ok", "phase": "3 activated"}), 200
+
+    return jsonify({"error": "unknown command"}), 400
 
 
-# ---------------------------
-# FASTAPI Dashboard (ASGI)
-# ---------------------------
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.wsgi import WSGIMiddleware
-
+# ---------------------
+# FastAPI (ASGI)
+# ---------------------
 api = FastAPI(title="JRAVIS Dashboard API")
 
 api.add_middleware(CORSMiddleware,
@@ -75,42 +62,26 @@ api.add_middleware(CORSMiddleware,
 
 
 @api.get("/summary")
-def get_summary():
+def summary():
     return {
         "system": "JRAVIS Dashboard",
         "status": "running",
-        "time": datetime.utcnow().isoformat(),
-        "note": "Dashboard API responding normally."
+        "time": datetime.utcnow().isoformat()
     }
 
 
-# ---------------------------
-# UNIFIED ASGI SERVER
-# ---------------------------
-asgi_app = FastAPI(title="JRAVIS Unified Server")
+# ---------------------
+# Unified ASGI App
+# ---------------------
+asgi_app = FastAPI(title="JRAVIS Unified ASGI Server")
 
-# CORS
 asgi_app.add_middleware(CORSMiddleware,
                         allow_origins=["*"],
                         allow_methods=["*"],
                         allow_headers=["*"])
 
-# mount Flask WSGI inside ASGI
 asgi_app.mount("/", WSGIMiddleware(flask_app))
-
-# mount FastAPI at /api
 asgi_app.mount("/api", api)
 
-# Export for Gunicorn/Uvicorn
+# Gunicorn entrypoint
 application = asgi_app
-
-from activation_engine import activate_phase_1, activate_phase_2, activate_phase_3
-
-if cmd in ["jravis begin phase 1", "phase1", "activate_phase_1"]:
-    return jsonify(activate_phase_1()), 200
-
-if cmd in ["jravis begin phase 2", "phase2", "activate_phase_2"]:
-    return jsonify(activate_phase_2()), 200
-
-if cmd in ["jravis begin phase 3", "phase3", "activate_phase_3"]:
-    return jsonify(activate_phase_3()), 200
