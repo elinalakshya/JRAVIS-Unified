@@ -49,11 +49,11 @@ from p3_plugins_handler import run_plugins_handler
 from p3_voiceover_handler import run_voiceover_handler
 from p3_musicbeats_handler import run_musicbeats_handler
 from p3_worksheets_handler import run_worksheets_handler
-from p3_saas_reseller_handler import run_saasreseller_handler
-from p3_webautomation_handler import run_scripts_handler
-from p3_virtualevents_handler import run_events_handler
-from p3_api_marketplace_handler import run_apimarket_handler
-from p3_crypto_microtasks_handler import run_cryptomicro_handler
+from p3_saas_reseller_handler import run_saas_reseller_handler as run_saasreseller_handler
+from p3_webautomation_handler import run_webautomation_handler as run_scripts_handler
+from p3_virtualevents_handler import run_virtualevents_handler as run_events_handler
+from p3_api_marketplace_handler import run_api_marketplace_handler as run_apimarket_handler
+from p3_crypto_microtasks_handler import run_crypto_microtasks_handler as run_cryptomicro_handler
 
 # =============================
 # STREAM MAP — FINAL MATCHED LIST OF 30 STREAMS
