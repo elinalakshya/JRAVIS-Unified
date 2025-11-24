@@ -26,6 +26,7 @@ def save_output(data):
     json.dump(data, open(fp, "w"), indent=4)
     return fp
 
+
 def run_newsletter_handler():
     r=generate_newsletters()
     fp=save_output(r)
