@@ -19,12 +19,13 @@ def generate_webflow_templates():
         })
     return res
 
-def save_output(r):
-    ensure_dir()
-    ts=datetime.now().strftime("%Y%m%d_%H%M%S")
-    fp=f\"{BASE_PATH}webflow_{ts}.json\"
-    json.dump(r,open(fp,\"w\"),indent=4)
+def save_output(data):
+    os.makedirs(BASE_PATH, exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    fp = f"{BASE_PATH}webflow_{ts}.json"
+    json.dump(data, open(fp, "w"), indent=4)
     return fp
+
 
 def run_webflow_handler():
     r=generate_webflow_templates()
