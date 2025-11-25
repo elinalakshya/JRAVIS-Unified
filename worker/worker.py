@@ -2,6 +2,9 @@
 # JRAVIS WORKER (Unified Repo - Option A)
 # Handles 30-stream automation + payout engine
 # ============================================
+import sys, os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import time
 import random
