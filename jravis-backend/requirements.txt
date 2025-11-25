@@ -1,6 +1,0 @@
-fastapi
-uvicorn
-reportlab
-PyPDF2
-requests
-python-dotenv
