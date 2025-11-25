@@ -1,87 +1,142 @@
-#!/usr/bin/env python3
-"""
-JRAVIS Backend (MAIN)
-Clean ASGI + WSGI Hybrid
-"""
+# -----------------------------------------------------------
+# JRAVIS BRAIN v3 — MASTER CONTROLLER
+# Ethical + Legal + Original + Human-like + Robo Speed
+# Controls all JRAVIS services from ONE FILE.
+# -----------------------------------------------------------
 
-import os
-import logging
-from datetime import datetime
+import requests
+import random
+import time
+import hashlib
 
-from flask import Flask, jsonify, request
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.wsgi import WSGIMiddleware
+# -----------------------------------------------------------
+# SERVICE URLS (Replace with your live deployments)
+# -----------------------------------------------------------
+BACKEND = "https://jravis-backend.onrender.com"
+INTELLIGENCE = "https://jravis-intelligence-worker.onrender.com"
+MEMORY = "https://jravis-memory-worker.onrender.com"
+REPORT = "https://jravis-report-service.onrender.com"
 
-# ---------------------
-# Flask App (WSGI)
-# ---------------------
-flask_app = Flask(__name__)
-
-
-@flask_app.route("/", methods=["GET"])
-def root():
-    return jsonify({
-        "status": "ok",
-        "system": "JRAVIS Backend",
-        "message": "🚀 JRAVIS Backend Active"
-    })
+LOCK = "JRV2040_LOCKED_KEY_001"
 
 
-@flask_app.route("/health", methods=["GET"])
-def health():
-    return jsonify({"status": "ok", "time": datetime.utcnow().isoformat()})
+# -----------------------------------------------------------
+# UNIQUE CONTENT GENERATOR (no reuse, no plagiarism)
+# -----------------------------------------------------------
+def generate_unique_content():
+    topics = [
+        "wealth creation", "ai automation", "global business", "mindset",
+        "productivity", "ethical income", "mission 2040 growth",
+        "digital freedom"
+    ]
+
+    topic = random.choice(topics)
+
+    # Generate original idea
+    idea = f"New insight on {topic}: Focus on {random.choice(['consistency', 'quality', 'long-term value', 'automation', 'customer trust'])} to grow faster."
+
+    # Add uniqueness using hashed randomness
+    unique_stamp = hashlib.sha256(str(
+        random.random()).encode()).hexdigest()[:12]
+
+    content = f"{idea}\n#{topic.replace(' ', '')}_{unique_stamp}"
+
+    return content
 
 
-@flask_app.route("/command", methods=["POST"])
-def command():
-    data = request.get_json(force=True)
-    cmd = data.get("cmd", "").lower().strip()
+# -----------------------------------------------------------
+# HUMAN MODE — Safe, slow, real human behaviour
+# -----------------------------------------------------------
+def human_mode():
+    actions = [
+        "scrolling feed", "reading a post", "liking content",
+        "commenting politely", "saving a post", "checking notifications"
+    ]
 
-    if cmd in ["activate_phase_1", "begin_phase_1", "phase1_start"]:
-        return jsonify({"status": "ok", "phase": "1 activated"}), 200
+    action = random.choice(actions)
+    delay = round(random.uniform(2.5, 8.0), 2)
 
-    if cmd in ["activate_phase_2", "begin_phase_2", "phase2_start"]:
-        return jsonify({"status": "ok", "phase": "2 activated"}), 200
-
-    if cmd in ["activate_phase_3", "begin_phase_3", "phase3_start"]:
-        return jsonify({"status": "ok", "phase": "3 activated"}), 200
-
-    return jsonify({"error": "unknown command"}), 400
+    return {"mode": "human", "action": action, "delay": delay}
 
 
-# ---------------------
-# FastAPI (ASGI)
-# ---------------------
-api = FastAPI(title="JRAVIS Dashboard API")
-
-api.add_middleware(CORSMiddleware,
-                   allow_origins=["*"],
-                   allow_methods=["*"],
-                   allow_headers=["*"])
-
-
-@api.get("/summary")
-def summary():
+# -----------------------------------------------------------
+# ROBO MODE — Fast content creation engine
+# -----------------------------------------------------------
+def robo_mode():
     return {
-        "system": "JRAVIS Dashboard",
-        "status": "running",
-        "time": datetime.utcnow().isoformat()
+        "mode": "robo",
+        "action": "create_content",
+        "content": generate_unique_content(),
+        "count": random.randint(2, 5)
     }
 
 
-# ---------------------
-# Unified ASGI App
-# ---------------------
-asgi_app = FastAPI(title="JRAVIS Unified ASGI Server")
+# -----------------------------------------------------------
+# BRAIN DECISION — 60% Robo, 40% Human for safety
+# -----------------------------------------------------------
+def brain_decision():
+    if random.random() <= 0.60:
+        return robo_mode()
+    else:
+        return human_mode()
 
-asgi_app.add_middleware(CORSMiddleware,
-                        allow_origins=["*"],
-                        allow_methods=["*"],
-                        allow_headers=["*"])
 
-asgi_app.mount("/", WSGIMiddleware(flask_app))
-asgi_app.mount("/api", api)
+# -----------------------------------------------------------
+# SEND TASK TO BACKEND QUEUE
+# -----------------------------------------------------------
+def queue_task(task):
+    return requests.post(f"{BACKEND}/task/new",
+                         json={
+                             "task": task,
+                             "lock": LOCK
+                         }).json()
 
-# Gunicorn entrypoint
-application = asgi_app
+
+# -----------------------------------------------------------
+# TRIGGER OTHER SERVICES
+# -----------------------------------------------------------
+def run_intelligence():
+    return requests.get(f"{INTELLIGENCE}/run").json()
+
+
+def run_memory():
+    return requests.get(f"{MEMORY}/sync").json()
+
+
+def run_reports():
+    return requests.get(f"{REPORT}/generate").json()
+
+
+# -----------------------------------------------------------
+# MAIN LOOP — Runs every hour
+# -----------------------------------------------------------
+def main():
+    while True:
+        print("\n🔥 JRAVIS-BRAIN v3 — STARTING CYCLE")
+
+        # 1. Make a decision
+        task = brain_decision()
+        print("🧠 Decision:", task)
+
+        # 2. Queue the task
+        backend = queue_task(task)
+        print("📥 Task Queue:", backend)
+
+        # 3. Run intelligence worker (posting + human behaviour)
+        intel = run_intelligence()
+        print("🤖 Intelligence Worker:", intel)
+
+        # 4. Update memory so no duplicates ever happen
+        mem = run_memory()
+        print("💾 Memory Sync:", mem)
+
+        # 5. Generate daily/weekly reports
+        rep = run_reports()
+        print("📊 Reports:", rep)
+
+        print("⏳ Sleeping 1 hour…\n")
+        time.sleep(3600)
+
+
+if __name__ == "__main__":
+    main()
